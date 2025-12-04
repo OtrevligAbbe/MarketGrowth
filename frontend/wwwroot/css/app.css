@@ -187,12 +187,27 @@ code {
 }
 
 .mg-logo-text {
-    font-weight: 700;
-    font-size: 1.05rem;
-    letter-spacing: 0.08em;
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: 1.35rem; /* större text */
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     color: #f9fafb;
+    cursor: pointer;
+    transition: opacity 0.15s ease, transform 0.15s ease;
 }
+.mg-logo-link {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+    .mg-logo-link:hover .mg-logo-text {
+        opacity: 0.85;
+        transform: translateY(-1px);
+    }
+
 
 /* Nav-länkar i mitten */
 .mg-navbar-center {
