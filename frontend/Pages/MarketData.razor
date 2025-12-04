@@ -1,57 +1,98 @@
-﻿@page "/weather"
-@inject HttpClient Http
+﻿@page "/marketdata"
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 
-<PageTitle>Weather</PageTitle>
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
 
-<h1>Weather</h1>
+<PageTitle>MarketGrowth Overview</PageTitle>
 
-<p>This component demonstrates fetching data from the server.</p>
+<div class="container mt-5">
+    <h1>MarketGrowth: Market Overview</h1>
 
-@if (forecasts == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th aria-label="Temperature in Celsius">Temp. (C)</th>
-                <th aria-label="Temperature in Farenheit">Temp. (F)</th>
-                <th>Summary</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var forecast in forecasts)
-            {
+    @if (_data == null)
+    {
+        <p><em>Loading market data (via Azure Function)...</em></p>
+    }
+    else if (_errorMessage != null)
+    {
+        <div class="alert alert-danger">
+            <h4>Error: Could not retrieve data</h4>
+            <p>@_errorMessage</p>
+            <p>Please ensure your Azure Function App is running and accessible.</p>
+        </div>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead class="thead-dark">
                 <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
+                    <th>Asset</th>
+                    <th>Price (USD)</th>
+                    <th>Action</th>
                 </tr>
-            }
-        </tbody>
-    </table>
-}
+            </thead>
+            <tbody>
+                @foreach (var (key, value) in _data)
+                {
+                    <tr>
+                        <td><strong>@key</strong></td>
+                        <td>$@value.Usd.ToString("N2")</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-warning" 
+                                    @onclick="(() => SaveFavorite(key))">
+                                Save as Favorite
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <p class="mt-4"><small>Data fetched: @_timestamp.ToLocalTime().ToString("HH:mm:ss")</small></p>
+</div>
 
 @code {
-    private WeatherForecast[]? forecasts;
+    private Dictionary<string, CoinData>? _data;
+    private DateTime _timestamp;
+    private string? _errorMessage;
+
+    // Models to match the CoinGecko response structure
+    public class CoinData
+    {
+        public decimal Usd { get; set; }
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
+        try
+        {
+            // Use HttpClientFactory to get a client that automatically
+            // handles B2C tokens for authenticated API calls.
+            var client = HttpClientFactory.CreateClient("MarketGrowth.Api");
+            
+            // Call your C# Azure Function (API route)
+            _data = await client.GetFromJsonAsync<Dictionary<string, CoinData>>("api/market/crypto");
+            _timestamp = DateTime.Now;
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            // If the user is not authenticated, force them to the login page.
+            exception.Redirect();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Could not call API: {ex.Message}";
+        }
     }
 
-    public class WeatherForecast
+    private void SaveFavorite(string assetName)
     {
-        public DateOnly Date { get; set; }
-
-        public int TemperatureC { get; set; }
-
-        public string? Summary { get; set; }
-
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+        // TODO: Implement the call to SaveFavorite.cs Azure Function
+        // This should save 'assetName' along with the user's ID (from the B2C token) into Cosmos DB.
+        
+        // For now, redirect to show a conceptual flow
+        // NavigationManager.NavigateTo($"/favorites", forceLoad: true);
     }
 }
