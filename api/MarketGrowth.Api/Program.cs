@@ -5,10 +5,11 @@ var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
     .ConfigureServices(services =>
     {
-        // 1. Lägger till HttpClient för att kunna injicera det i dina functions
+        // Lägger till HttpClient för att kunna injicera det i dina Functions
         services.AddHttpClient();
 
-        // Här kan du senare lägga till andra tjänster som Cosmos DB Client
+        // Här kan du senare lägga till t.ex. Cosmos DB Client
+        // services.AddSingleton<CosmosClient>(...);
 
     })
     .Build();
