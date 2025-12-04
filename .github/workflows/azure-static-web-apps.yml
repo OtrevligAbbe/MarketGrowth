@@ -28,8 +28,7 @@ jobs:
 
           # Blazor frontend
           app_location: "frontend"
-          app_build_command: "dotnet publish -c Release -o build"
-          output_location: "build/wwwroot"
+          output_location: "wwwroot"
 
           # Azure Functions API
           api_location: "api/MarketGrowth.Api"
