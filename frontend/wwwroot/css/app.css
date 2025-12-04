@@ -10,7 +10,8 @@ h1:focus {
     outline: none;
 }
 
-a, .btn-link {
+a,
+.btn-link {
     color: #1db954;
 }
 
@@ -81,7 +82,7 @@ a, .btn-link {
 }
 
     .blazor-error-boundary::after {
-        content: "An error has occurred."
+        content: "An error has occurred.";
     }
 
 /* ================================
@@ -121,105 +122,6 @@ a, .btn-link {
     }
 
 /* ================================
-   MARKETGROWTH HEADER
-================================ */
-.mg-header {
-    background: white;
-    border-bottom: 1px solid #e5e7eb;
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.mg-logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-weight: bold;
-    font-size: 1.4rem;
-    color: #16a34a;
-}
-
-.mg-logo-img {
-    width: 48px;
-    height: auto;
-    object-fit: contain;
-}
-
-.mg-actions button {
-    background: #1db954;
-    border: none;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    font-weight: bold;
-}
-
-/* ================================
-   SIDEMENU
-================================ */
-.sidebar {
-    background: linear-gradient(180deg, #072f1a 0%, #064e3b 100%);
-    color: white;
-}
-
-    .sidebar a {
-        color: white;
-    }
-
-        .sidebar a.active {
-            background-color: rgba(255, 255, 255, 0.15);
-        }
-
-/* ================================
-   MARKET DATA CARDS
-================================ */
-.market-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 1.5rem;
-    padding: 2rem;
-}
-
-.market-card {
-    background: white;
-    border-radius: 14px;
-    padding: 1.2rem;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-    transition: transform 0.2s ease;
-}
-
-    .market-card:hover {
-        transform: translateY(-4px);
-    }
-
-.market-name {
-    font-weight: bold;
-    font-size: 1.1rem;
-}
-
-.market-price {
-    font-size: 1.4rem;
-    font-weight: bold;
-    color: #16a34a;
-    margin-top: 0.5rem;
-}
-
-.market-change {
-    margin-top: 0.3rem;
-    font-size: 0.9rem;
-}
-
-.market-positive {
-    color: #16a34a;
-}
-
-.market-negative {
-    color: #dc2626;
-}
-
-/* ================================
    CODE
 ================================ */
 code {
@@ -239,7 +141,127 @@ code {
 .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
-/* ========== MarketGrowth landing page ========== */
+
+/* ================================
+   LAYOUT - APP + NAVBAR
+   (Capital-liknande topbar)
+================================ */
+
+.mg-app {
+    min-height: 100vh;
+    background: #0b1018; /* mörk bakgrund bakom innehållet */
+    color: #e5e7eb;
+}
+
+/* Top navbar */
+.mg-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 2.5rem;
+    background: #050812;
+    border-bottom: 1px solid #111827;
+}
+
+/* Logo vänster */
+.mg-navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.mg-logo-mark {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #22c55e, #a3e635);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #022c22;
+    font-size: 1rem;
+}
+
+.mg-logo-text {
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #f9fafb;
+}
+
+/* Nav-länkar i mitten */
+.mg-navbar-center {
+    display: flex;
+    align-items: center;
+    gap: 1.8rem;
+    margin-left: 3rem;
+}
+
+.mg-nav-link {
+    font-size: 0.95rem;
+    color: #9ca3af;
+    text-decoration: none;
+}
+
+    .mg-nav-link:hover {
+        color: #f9fafb;
+    }
+
+/* Knappsektion till höger */
+.mg-navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.mg-btn {
+    border-radius: 999px;
+    padding: 0.4rem 1.1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+}
+
+.mg-btn-primary {
+    background: #22c55e;
+    border-color: #22c55e;
+    color: #022c22;
+}
+
+    .mg-btn-primary:hover {
+        background: #16a34a;
+        border-color: #16a34a;
+        color: #e5e7eb;
+    }
+
+.mg-btn-outline {
+    background: transparent;
+    border-color: #4b5563;
+    color: #e5e7eb;
+}
+
+    .mg-btn-outline:hover {
+        border-color: #9ca3af;
+    }
+
+/* Huvudinnehåll under navbaren */
+.mg-main {
+    padding: 2rem 2.5rem;
+    background: #0b1018;
+}
+
+/* ================================
+   LANDING PAGE (Home)
+================================ */
 
 .mg-landing {
     padding: 2rem 2.5rem;
@@ -308,8 +330,73 @@ code {
     margin-bottom: 2rem;
 }
 
-/* Lite responsivitet */
+/* ================================
+   MARKET DATA CARDS
+================================ */
+
+.market-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+}
+
+.market-card {
+    background: white;
+    border-radius: 14px;
+    padding: 1.2rem;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease;
+}
+
+    .market-card:hover {
+        transform: translateY(-4px);
+    }
+
+.market-name {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.market-price {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #16a34a;
+    margin-top: 0.5rem;
+}
+
+.market-change {
+    margin-top: 0.3rem;
+    font-size: 0.9rem;
+}
+
+.market-positive {
+    color: #16a34a;
+}
+
+.market-negative {
+    color: #dc2626;
+}
+
+/* ================================
+   RESPONSIVITET
+================================ */
 @media (max-width: 900px) {
+    .mg-navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .mg-navbar-center {
+        margin-left: 0;
+        flex-wrap: wrap;
+    }
+
+    .mg-main {
+        padding: 1.5rem;
+    }
+
     .mg-landing {
         padding: 1.5rem;
     }
