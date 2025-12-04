@@ -1,7 +1,61 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<div class="mg-hero">
+    <header class="mg-hero-header">
+        <div class="mg-logo">
+            <img
+                src="images/MarketGrowth-logo.jpg"
+                alt="MarketGrowth logo"
+                class="mg-logo-img" />
+        </div>
 
-<h1>Hello, world!</h1>
+        <div class="mg-brand">
+            <div class="mg-brand-name">MARKETGROWTH</div>
+            <div class="mg-brand-tagline">Nurturing your financial future</div>
+        </div>
 
-Welcome to your new app.
+        <div class="mg-header-actions">
+            <a href="/authentication" class="btn btn-outline-success me-2">
+                Log in
+            </a>
+            <a href="/marketdata" class="btn btn-success">
+                Open market overview
+            </a>
+        </div>
+    </header>
+
+    <section class="mg-hero-body">
+        <div class="mg-hero-text">
+            <h2>See your markets grow</h2>
+            <p>
+                MarketGrowth samlar data från externa API:er via Azure Functions och
+                visar en enkel översikt över dina valda marknader. Följ priser,
+                spara favoriter och testa egna strategier.
+            </p>
+
+            <a href="/marketdata" class="btn btn-success btn-lg">
+                Go to live crypto data
+            </a>
+        </div>
+
+        <div class="mg-hero-graph">
+            <div class="mg-graph-bar mg-graph-bar-1"></div>
+            <div class="mg-graph-bar mg-graph-bar-2"></div>
+            <div class="mg-graph-bar mg-graph-bar-3"></div>
+            <div class="mg-graph-bar mg-graph-bar-4"></div>
+
+            <svg viewBox="0 0 100 60" class="mg-graph-line">
+                <polyline
+                    points="5,55 25,40 45,35 70,20 95,10"
+                    fill="none"
+                    stroke="var(--mg-green)"
+                    stroke-width="3" />
+
+                <circle cx="25" cy="40" r="2.5" fill="var(--mg-green)" />
+                <circle cx="45" cy="35" r="2.5" fill="var(--mg-green)" />
+                <circle cx="70" cy="20" r="2.5" fill="var(--mg-green)" />
+                <circle cx="95" cy="10" r="2.5" fill="var(--mg-green)" />
+            </svg>
+        </div>
+    </section>
+</div>
