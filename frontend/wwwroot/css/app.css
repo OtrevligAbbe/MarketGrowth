@@ -239,3 +239,88 @@ code {
 .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+/* ========== MarketGrowth landing page ========== */
+
+.mg-landing {
+    padding: 2rem 2.5rem;
+    background-color: #f5f7fa;
+}
+
+/* Header med logga + knappar */
+.mg-landing-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+}
+
+.mg-landing-brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.mg-landing-logo {
+    width: 72px;
+    height: auto;
+    object-fit: contain;
+}
+
+.mg-landing-titleblock {
+    display: flex;
+    flex-direction: column;
+}
+
+.mg-landing-name {
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    font-size: 1.1rem;
+}
+
+.mg-landing-tagline {
+    font-size: 0.95rem;
+    color: #6b7280;
+    margin-top: 0.1rem;
+}
+
+.mg-landing-actions .btn {
+    font-weight: 600;
+}
+
+/* Hero-panelen under headern */
+.mg-landing-hero {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 2.5rem 3rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.mg-landing-hero-text h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.mg-landing-hero-text p {
+    max-width: 40rem;
+    font-size: 1.05rem;
+    color: #4b5563;
+    margin-bottom: 2rem;
+}
+
+/* Lite responsivitet */
+@media (max-width: 900px) {
+    .mg-landing {
+        padding: 1.5rem;
+    }
+
+    .mg-landing-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .mg-landing-hero {
+        padding: 2rem 1.5rem;
+    }
+}
