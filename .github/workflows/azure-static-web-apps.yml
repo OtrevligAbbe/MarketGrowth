@@ -1,11 +1,7 @@
-name: Azure Static Web Apps CI/CD
+name: MarketGrowth CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    types: [opened, synchronize, reopened, closed]
     branches:
       - main
 
@@ -33,6 +29,7 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "/frontend"
+
+          app_location: "frontend"
           api_location: "api/MarketGrowth.Api"
-          output_location: "wwwroot"
+          output_location: ""
