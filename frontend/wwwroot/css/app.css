@@ -426,3 +426,226 @@ code {
         padding: 2rem 1.5rem;
     }
 }
+/* ================================
+   HOME – HERO + PREVIEW
+================================ */
+
+.mg-home {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* HERO layout */
+.mg-home-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2.5fr);
+    gap: 2.5rem;
+    padding: 2rem 0 1rem 0;
+    color: #0b1018;
+}
+
+.mg-home-hero-left h1 {
+    font-size: 2.6rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.mg-home-hero-left p {
+    font-size: 1.05rem;
+    color: #4b5563;
+    max-width: 34rem;
+}
+
+/* liten grön “pill” över rubriken */
+.mg-home-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(34, 197, 94, 0.09);
+    color: #16a34a;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+/* knappar under texten */
+.mg-home-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.5rem 0 1rem 0;
+}
+
+.mg-hero-secondary {
+    font-size: 0.85rem;
+}
+
+/* små stats-rutor */
+.mg-home-hero-stats {
+    display: flex;
+    gap: 1.25rem;
+    margin-top: 0.5rem;
+}
+
+.mg-home-stat {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.mg-home-stat-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+/* “graf”-kortet till höger */
+.mg-home-hero-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mg-home-chart-card {
+    background: radial-gradient(circle at top left, #1f2933 0%, #020617 60%);
+    border-radius: 20px;
+    padding: 1.4rem 1.6rem;
+    color: #e5e7eb;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+    width: 100%;
+    max-width: 360px;
+}
+
+.mg-home-chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+}
+
+.mg-chart-title {
+    font-weight: 600;
+}
+
+.mg-chart-badge {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+/* själva linjen */
+.mg-home-chart {
+    position: relative;
+    height: 140px;
+    margin-bottom: 0.8rem;
+}
+
+.mg-home-chart-line {
+    position: absolute;
+    inset: 40% 6% 30% 6%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #22c55e, #a3e635);
+    transform: skewX(-15deg);
+    opacity: 0.9;
+}
+
+/* dots på linjen */
+.mg-home-chart-dot {
+    position: absolute;
+    width: 11px;
+    height: 11px;
+    border-radius: 999px;
+    background: #22c55e;
+    border: 2px solid #0b1120;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.45);
+}
+
+    .mg-home-chart-dot.dot-1 {
+        left: 10%;
+        bottom: 30%;
+    }
+
+    .mg-home-chart-dot.dot-2 {
+        left: 34%;
+        bottom: 52%;
+    }
+
+    .mg-home-chart-dot.dot-3 {
+        left: 63%;
+        bottom: 65%;
+    }
+
+    .mg-home-chart-dot.dot-4 {
+        left: 83%;
+        bottom: 78%;
+    }
+
+.mg-home-chart-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+/* preview-sektionen under */
+.mg-home-markets-preview {
+    margin-top: 2.5rem;
+}
+
+.mg-home-markets-header h2 {
+    font-size: 1.4rem;
+    margin-bottom: 0.3rem;
+    color: #f9fafb;
+}
+
+.mg-home-markets-header p {
+    color: #9ca3af;
+    font-size: 0.9rem;
+}
+
+.mg-home-preview-grid {
+    margin-top: 1.2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 1rem;
+}
+
+.mg-home-preview-card {
+    background: #020617;
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    border: 1px solid #111827;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.mg-preview-name {
+    font-size: 0.85rem;
+    color: #9ca3af;
+}
+
+.mg-preview-price {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #e5e7eb;
+}
+
+.mg-preview-change {
+    font-size: 0.8rem;
+}
+
+    .mg-preview-change.positive {
+        color: #22c55e;
+    }
+
+    .mg-preview-change.negative {
+        color: #f97373;
+    }

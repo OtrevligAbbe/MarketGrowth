@@ -1,40 +1,104 @@
 ﻿@page "/"
 
-<div class="mg-landing">
-    <header class="mg-landing-header">
-        <div class="mg-landing-brand">
-            <img src="images/MarketGrowth-logo.jpg"
-                 alt="MarketGrowth logo"
-                 class="mg-landing-logo" />
+<div class="mg-home">
 
-            <div class="mg-landing-titleblock">
-                <div class="mg-landing-name">MARKETGROWTH</div>
-                <div class="mg-landing-tagline">Nurturing your financial future</div>
+    <!-- HERO-DELEN -->
+    <section class="mg-home-hero">
+        <div class="mg-home-hero-left">
+            <div class="mg-home-pill">Serverless market overview</div>
+
+            <h1>See your markets grow</h1>
+
+            <p>
+                MarketGrowth samlar data från externa API:er via Azure Functions och
+                visar en enkel översikt över dina valda marknader. Följ priser, spara
+                favoriter och testa egna strategier i molnet.
+            </p>
+
+            <div class="mg-home-hero-actions">
+                <a href="/marketdata" class="mg-btn mg-btn-primary">
+                    Go to live crypto data
+                </a>
+                <a href="/authentication" class="mg-btn mg-btn-outline mg-hero-secondary">
+                    Log in to save favourites
+                </a>
+            </div>
+
+            <div class="mg-home-hero-stats">
+                <div class="mg-home-stat">
+                    <span class="mg-home-stat-label">Crypto assets</span>
+                    <span class="mg-home-stat-value">5</span>
+                </div>
+                <div class="mg-home-stat">
+                    <span class="mg-home-stat-label">Stocks</span>
+                    <span class="mg-home-stat-value">5</span>
+                </div>
+                <div class="mg-home-stat">
+                    <span class="mg-home-stat-label">Update interval</span>
+                    <span class="mg-home-stat-value">60s</span>
+                </div>
             </div>
         </div>
 
-        <div class="mg-landing-actions">
-            <a href="/authentication" class="btn btn-outline-success me-2">
-                Log in
-            </a>
-            <a href="/marketdata" class="btn btn-success">
-                Open market overview
-            </a>
+        <div class="mg-home-hero-right">
+            <!-- Enkel “fejk”-graf som ser snygg ut tills vi kopplar på riktiga data -->
+            <div class="mg-home-chart-card">
+                <div class="mg-home-chart-header">
+                    <span class="mg-chart-title">Market overview</span>
+                    <span class="mg-chart-badge">Demo data</span>
+                </div>
+
+                <div class="mg-home-chart">
+                    <div class="mg-home-chart-line"></div>
+                    <div class="mg-home-chart-dot dot-1"></div>
+                    <div class="mg-home-chart-dot dot-2"></div>
+                    <div class="mg-home-chart-dot dot-3"></div>
+                    <div class="mg-home-chart-dot dot-4"></div>
+                </div>
+
+                <div class="mg-home-chart-footer">
+                    <span>BTC</span>
+                    <span>ETH</span>
+                    <span>NASDAQ</span>
+                    <span>OMXS30</span>
+                </div>
+            </div>
         </div>
-    </header>
+    </section>
 
-    <section class="mg-landing-hero">
-        <div class="mg-landing-hero-text">
-            <h1>See your markets grow</h1>
-            <p>
-                MarketGrowth samlar data från externa API:er via Azure Functions och
-                visar en enkel översikt över dina valda marknader. Följ priser,
-                spara favoriter och testa egna strategier.
-            </p>
+    <!-- SEKTION FÖR “SNABB ÖVERSIKT” (plats för riktiga 5+5 kort sen) -->
+    <section class="mg-home-markets-preview">
+        <div class="mg-home-markets-header">
+            <h2>Quick market preview</h2>
+            <p>Här kommer vi senare visa 5 kryptovalutor och 5 aktier med live-data.</p>
+        </div>
 
-            <a href="/marketdata" class="btn btn-success btn-lg">
-                Go to live crypto data
-            </a>
+        <div class="mg-home-preview-grid">
+            <div class="mg-home-preview-card">
+                <span class="mg-preview-name">Bitcoin (BTC)</span>
+                <span class="mg-preview-price">$48 200</span>
+                <span class="mg-preview-change positive">+2.3%</span>
+            </div>
+            <div class="mg-home-preview-card">
+                <span class="mg-preview-name">Ethereum (ETH)</span>
+                <span class="mg-preview-price">$3 250</span>
+                <span class="mg-preview-change negative">-0.8%</span>
+            </div>
+            <div class="mg-home-preview-card">
+                <span class="mg-preview-name">Nasdaq 100</span>
+                <span class="mg-preview-price">17 890</span>
+                <span class="mg-preview-change positive">+0.6%</span>
+            </div>
+            <div class="mg-home-preview-card">
+                <span class="mg-preview-name">OMXS30</span>
+                <span class="mg-preview-price">2 340</span>
+                <span class="mg-preview-change positive">+1.1%</span>
+            </div>
+            <div class="mg-home-preview-card">
+                <span class="mg-preview-name">Adidas</span>
+                <span class="mg-preview-price">€186</span>
+                <span class="mg-preview-change negative">-1.4%</span>
+            </div>
         </div>
     </section>
 </div>
