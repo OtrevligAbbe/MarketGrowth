@@ -1,56 +1,100 @@
 ﻿@page "/marketdata"
-@using frontend.Shared
-@inject HttpClient Http
+@using System.Net.Http.Json         
+@using frontend.Shared               
+@inject IHttpClientFactory HttpClientFactory
 
-<h1>Live Crypto Market</h1>
+<h1>MarketGrowth</h1>
+<p class="mg-subtitle">Quick market preview with live data</p>
 
-@if (_prices == null && _errorMessage == null)
+@if (!string.IsNullOrEmpty(_error))
 {
-    <p>Laddar live-data...</p>
+    <p style="color: red">@_error</p>
 }
-else if (_errorMessage != null)
+else if (_overview == null)
 {
-    <p style="color: red">@_errorMessage</p>
+    <p>Loading live market data...</p>
 }
 else
 {
-    <div class="market-grid">
-        @foreach (var kvp in _prices)
-        {
-            var coin = kvp.Value;
-
-            <div class="market-card">
-                <div class="market-name">@coin.Symbol</div>
-
-                <div class="market-price">
-                    $@coin.PriceUsd.ToString("N2")
+    <section class="mg-section">
+        <h2 class="mg-section-title">Crypto assets</h2>
+        <div class="mg-card-row">
+            @foreach (var asset in _overview.Crypto)
+            {
+                <div class="mg-preview-card">
+                    <div class="mg-card-symbol">@asset.Symbol</div>
+                    <div class="mg-card-name">@asset.Name</div>
+                    <div class="mg-card-price">
+                        @asset.PriceUsd.ToString("C2",
+                            System.Globalization.CultureInfo.GetCultureInfo("en-US"))
+                    </div>
+                    <div class="mg-card-change @(asset.Change24h >= 0 ? "mg-pos" : "mg-neg")">
+                        @asset.Change24h?.ToString("0.##") %  
+                    </div>
                 </div>
+            }
+        </div>
+    </section>
 
-                <div class="market-change @(coin.Change24h >= 0 ? "market-positive" : "market-negative")">
-                    @coin.Change24h.ToString("0.00") %
+    <section class="mg-section">
+        <h2 class="mg-section-title">Stocks</h2>
+        <div class="mg-card-row">
+            @foreach (var asset in _overview.Stocks)
+            {
+                <div class="mg-preview-card">
+                    <div class="mg-card-symbol">@asset.Symbol</div>
+                    <div class="mg-card-name">@asset.Name</div>
+                    <div class="mg-card-price">
+                        @asset.PriceUsd.ToString("C2",
+                            System.Globalization.CultureInfo.GetCultureInfo("en-US"))
+                    </div>
+                    <div class="mg-card-change @(asset.Change24h >= 0 ? "mg-pos" : "mg-neg")">
+                        @asset.Change24h?.ToString("0.##") %
+                    </div>
                 </div>
-            </div>
-        }
-    </div>
+            }
+        </div>
+    </section>
+
+    <section class="mg-section">
+        <h2 class="mg-section-title">World indices</h2>
+        <div class="mg-card-row">
+            @foreach (var asset in _overview.Indices)
+            {
+                <div class="mg-preview-card">
+                    <div class="mg-card-symbol">@asset.Symbol</div>
+                    <div class="mg-card-name">@asset.Name</div>
+                    <div class="mg-card-price">
+                        @asset.PriceUsd.ToString("C2",
+                            System.Globalization.CultureInfo.GetCultureInfo("en-US"))
+                    </div>
+                    <div class="mg-card-change @(asset.Change24h >= 0 ? "mg-pos" : "mg-neg")">
+                        @asset.Change24h?.ToString("0.##") %
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
 }
 
 @code {
-    // MATCHAR JSON: { "BTC": { ... }, "ETH": { ... } }
-    private Dictionary<string, MarketPrice>? _prices;
-    private string? _errorMessage;
+    private MarketOverviewResponse? _overview;
+    private string? _error;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            // OBS: relativ url – INTE http://localhost:7247 längre
-            _prices = await Http.GetFromJsonAsync<Dictionary<string, MarketPrice>>(
-                "api/market/crypto"
-            );
+            // Hämta din named HttpClient från Program.cs
+            var client = HttpClientFactory.CreateClient("MarketGrowth.Api");
+
+            // Anropa Azure Function: GET /api/market/overview
+            _overview = await client.GetFromJsonAsync<MarketOverviewResponse>(
+                "api/market/overview");
         }
         catch (Exception ex)
         {
-            _errorMessage = $"Kunde inte hämta data: {ex.Message}";
+            _error = $"Kunde inte hämta marknadsdata: {ex.Message}";
         }
     }
 }
