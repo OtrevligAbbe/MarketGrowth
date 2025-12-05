@@ -87,11 +87,11 @@ else
         try
         {
 #if DEBUG
-            // Lokalt – Azure Function
+            // Lokalt – Function kör på din dator
             var url = "http://localhost:7247/api/market/overview";
 #else
-            // Azure Static Web Apps
-            var url = "api/market/overview";
+            // I Azure – prata direkt med din Function App
+            var url = "https://marketgrowth-api-astenhoff.azurewebsites.net/api/market/overview";
 #endif
 
             _overview = await Http.GetFromJsonAsync<MarketOverviewResponse>(url);
@@ -102,3 +102,4 @@ else
         }
     }
 }
+
