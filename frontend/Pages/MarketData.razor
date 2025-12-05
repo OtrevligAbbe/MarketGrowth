@@ -1,10 +1,8 @@
 ﻿@page "/marketdata"
-@using System.Net.Http.Json         
-@using frontend.Shared               
-@inject System.Net.Http.IHttpClientFactory HttpClientFactory
-
-
-
+@using System.Net.Http
+@using System.Net.Http.Json
+@using frontend.Shared
+@inject HttpClient Http
 
 <h1>MarketGrowth</h1>
 <p class="mg-subtitle">Quick market preview with live data</p>
@@ -32,7 +30,7 @@ else
                             System.Globalization.CultureInfo.GetCultureInfo("en-US"))
                     </div>
                     <div class="mg-card-change @(asset.Change24h >= 0 ? "mg-pos" : "mg-neg")">
-                        @asset.Change24h?.ToString("0.##") %  
+                        @asset.Change24h.ToString("0.##") %
                     </div>
                 </div>
             }
@@ -52,7 +50,7 @@ else
                             System.Globalization.CultureInfo.GetCultureInfo("en-US"))
                     </div>
                     <div class="mg-card-change @(asset.Change24h >= 0 ? "mg-pos" : "mg-neg")">
-                        @asset.Change24h?.ToString("0.##") %
+                        @asset.Change24h.ToString("0.##") %
                     </div>
                 </div>
             }
@@ -72,7 +70,7 @@ else
                             System.Globalization.CultureInfo.GetCultureInfo("en-US"))
                     </div>
                     <div class="mg-card-change @(asset.Change24h >= 0 ? "mg-pos" : "mg-neg")">
-                        @asset.Change24h?.ToString("0.##") %
+                        @asset.Change24h.ToString("0.##") %
                     </div>
                 </div>
             }
@@ -88,12 +86,15 @@ else
     {
         try
         {
-            // Hämta din named HttpClient från Program.cs
-            var client = HttpClientFactory.CreateClient("MarketGrowth.Api");
+#if DEBUG
+            // Lokalt – Azure Function
+            var url = "http://localhost:7247/api/market/overview";
+#else
+            // Azure Static Web Apps
+            var url = "api/market/overview";
+#endif
 
-            // Anropa Azure Function: GET /api/market/overview
-            _overview = await client.GetFromJsonAsync<MarketOverviewResponse>(
-                "api/market/overview");
+            _overview = await Http.GetFromJsonAsync<MarketOverviewResponse>(url);
         }
         catch (Exception ex)
         {
