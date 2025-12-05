@@ -35,7 +35,7 @@ else
 }
 
 @code {
-    // Dictionary<string, MarketPrice> eftersom JSON:et är ett objekt med nycklar BTC, ETH, osv
+    // MATCHAR JSON: { "BTC": { ... }, "ETH": { ... } }
     private Dictionary<string, MarketPrice>? _prices;
     private string? _errorMessage;
 
@@ -43,7 +43,7 @@ else
     {
         try
         {
-            // VIKTIGT: relativ URL – INTE localhost
+            // OBS: relativ url – INTE http://localhost:7247 längre
             _prices = await Http.GetFromJsonAsync<Dictionary<string, MarketPrice>>(
                 "api/market/crypto"
             );

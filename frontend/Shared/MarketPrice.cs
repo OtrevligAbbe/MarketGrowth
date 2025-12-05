@@ -1,6 +1,9 @@
-﻿public class MarketPrice
+﻿namespace frontend.Shared 
 {
-    public string Symbol { get; set; }
-    public decimal PriceUsd { get; set; }
-    public decimal Change24h { get; set; }
+    public class MarketPrice
+    {
+        public string Symbol { get; set; } = string.Empty;
+        public decimal PriceUsd { get; set; }
+        public decimal Change24h { get; set; }
+    }
 }
