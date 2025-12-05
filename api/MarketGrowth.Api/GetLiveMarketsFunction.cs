@@ -1,90 +1,117 @@
 ﻿using System.Net;
-using System.Net.Http.Json;
-using MarketGrowth.Api.Models;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 
-namespace MarketGrowth.Api;
-
-public class GetLiveMarketsFunction
+namespace MarketGrowth.Api
 {
-    private readonly HttpClient _httpClient;
-    private readonly ILogger<GetLiveMarketsFunction> _logger;
-
-    public GetLiveMarketsFunction(IHttpClientFactory httpClientFactory,
-                                  ILogger<GetLiveMarketsFunction> logger)
+    public class GetLiveMarketsFunction
     {
-        _httpClient = httpClientFactory.CreateClient();
-        _logger = logger;
-    }
+        private readonly HttpClient _httpClient;
+        private readonly ILogger<GetLiveMarketsFunction> _logger;
 
-    // Hjälpmodell för CoinGecko-svaret
-    private class CoinGeckoPrice
-    {
-        public decimal usd { get; set; }
-        public decimal? usd_24h_change { get; set; }
-    }
+        private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    [Function("GetLiveMarkets")]
-    public async Task<HttpResponseData> Run(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "markets/live")]
-        HttpRequestData req)
-    {
-        var response = req.CreateResponse(HttpStatusCode.OK);
-
-        try
+        public GetLiveMarketsFunction(IHttpClientFactory httpClientFactory,
+                                      ILogger<GetLiveMarketsFunction> logger)
         {
-            // 1. Hämta 5 krypton från CoinGecko
-            // (du kan byta vilka du vill)
-            var cryptoIds = "bitcoin,ethereum,solana,ripple,cardano";
+            _httpClient = httpClientFactory.CreateClient();
+            _logger = logger;
+        }
 
-            var url =
-                $"https://api.coingecko.com/api/v3/simple/price?" +
-                $"ids={cryptoIds}&vs_currencies=usd&include_24hr_change=true";
+        // URL blir: /api/market/crypto
+        [Function("GetLiveMarkets")]
+        public async Task<HttpResponseData> Run(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "market/crypto")]
+            HttpRequestData req)
+        {
+            var response = req.CreateResponse();
 
-            var cgData =
-                await _httpClient.GetFromJsonAsync<Dictionary<string, CoinGeckoPrice>>(url);
-
-            var list = new List<MarketInstrument>();
-
-            if (cgData != null)
+            try
             {
-                void AddCrypto(string id, string symbol, string name)
-                {
-                    if (!cgData.TryGetValue(id, out var p)) return;
+                // 1. Bygg CoinGecko-URL
+                var url =
+                    "https://api.coingecko.com/api/v3/simple/price" +
+                    "?ids=bitcoin,ethereum,solana,ripple,litecoin" +
+                    "&vs_currencies=usd" +
+                    "&include_24hr_change=true";
 
-                    list.Add(new MarketInstrument
-                    {
-                        Symbol = symbol,
-                        Name = name,
-                        Type = "crypto",
-                        PriceUsd = p.usd,
-                        Change24h = p.usd_24h_change
-                    });
+                // 2. Anropa CoinGecko
+                var cgResponse = await _httpClient.GetAsync(url);
+
+                if (!cgResponse.IsSuccessStatusCode)
+                {
+                    _logger.LogError("CoinGecko returned {StatusCode}", cgResponse.StatusCode);
+                    response.StatusCode = HttpStatusCode.BadGateway;
+                    await response.WriteStringAsync("Failed to fetch data from CoinGecko.");
+                    return response;
                 }
 
-                AddCrypto("bitcoin", "BTC", "Bitcoin");
-                AddCrypto("ethereum", "ETH", "Ethereum");
-                AddCrypto("solana", "SOL", "Solana");
-                AddCrypto("ripple", "XRP", "XRP");
-                AddCrypto("cardano", "ADA", "Cardano");
+                var json = await cgResponse.Content.ReadAsStringAsync();
+
+                // 3. Deserialisera svaret
+                var rawData = JsonSerializer.Deserialize<Dictionary<string, CoinGeckoPrice>>(json, JsonOptions);
+                if (rawData is null)
+                {
+                    response.StatusCode = HttpStatusCode.InternalServerError;
+                    await response.WriteStringAsync("Failed to parse CoinGecko response.");
+                    return response;
+                }
+
+                // 4. Mappa om till snyggare shape (BTC, ETH, …)
+                var result = new Dictionary<string, CoinMarketDto>();
+
+                void Add(string id, string symbol)
+                {
+                    if (rawData.TryGetValue(id, out var info))
+                    {
+                        result[symbol] = new CoinMarketDto
+                        {
+                            Symbol = symbol,
+                            PriceUsd = info.Usd,
+                            Change24h = info.Usd24hChange
+                        };
+                    }
+                }
+
+                Add("bitcoin", "BTC");
+                Add("ethereum", "ETH");
+                Add("solana", "SOL");
+                Add("ripple", "XRP");
+                Add("litecoin", "LTC");
+
+                // 5. Skicka tillbaka som JSON
+                response.StatusCode = HttpStatusCode.OK;
+                await response.WriteAsJsonAsync(result);
+                return response;
             }
-
-            // 2. TODO: Hämta 5 aktier från ett gratis aktie-API
-            // Här lägger du sen in motsvarande kod för aktier.
-            // Lägg till dem i samma "list" men med Type = "stock".
-
-            await response.WriteAsJsonAsync(list);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while fetching data from CoinGecko");
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                await response.WriteStringAsync("Internal server error.");
+                return response;
+            }
         }
-        catch (Exception ex)
+
+        // Hur CoinGecko ser ut
+        private class CoinGeckoPrice
         {
-            _logger.LogError(ex, "Error while fetching live market data");
+            [JsonPropertyName("usd")]
+            public decimal Usd { get; set; }
 
-            response = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await response.WriteStringAsync("Error while fetching market data");
+            [JsonPropertyName("usd_24h_change")]
+            public decimal Usd24hChange { get; set; }
         }
 
-        return response;
+        // Vad vi skickar till frontend
+        public class CoinMarketDto
+        {
+            public string Symbol { get; set; } = string.Empty;
+            public decimal PriceUsd { get; set; }
+            public decimal Change24h { get; set; }
+        }
     }
 }

@@ -8,9 +8,6 @@ var host = new HostBuilder()
         // Lägger till HttpClient för att kunna injicera det i dina Functions
         services.AddHttpClient();
 
-        // Här kan du senare lägga till t.ex. Cosmos DB Client
-        // services.AddSingleton<CosmosClient>(...);
-
     })
     .Build();
 
