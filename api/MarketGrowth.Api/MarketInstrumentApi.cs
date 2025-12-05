@@ -1,4 +1,4 @@
-﻿namespace MarketGrowth.Api.Models;
+﻿namespace MarketGrowth.Api;
 
 public class MarketInstrument
 {

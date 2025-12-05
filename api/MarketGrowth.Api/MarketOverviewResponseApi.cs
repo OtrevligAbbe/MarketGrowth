@@ -1,4 +1,4 @@
-﻿using MarketGrowth.Api.Models;
+﻿using MarketGrowth.Api;
 using System;
 
 public class MarketOverviewResponse

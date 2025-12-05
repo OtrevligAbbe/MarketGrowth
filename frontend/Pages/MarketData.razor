@@ -1,7 +1,10 @@
 ﻿@page "/marketdata"
 @using System.Net.Http.Json         
 @using frontend.Shared               
-@inject IHttpClientFactory HttpClientFactory
+@inject System.Net.Http.IHttpClientFactory HttpClientFactory
+
+
+
 
 <h1>MarketGrowth</h1>
 <p class="mg-subtitle">Quick market preview with live data</p>
