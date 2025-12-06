@@ -76,30 +76,59 @@ else
             }
         </div>
     </section>
+
+    @* Extra: visa live-crypto om det behövs senare
+    @if (_liveCrypto is not null)
+    {
+        <section class="mg-section">
+            <h2 class="mg-section-title">Live crypto (from /api/market/crypto)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Price (USD)</th>
+                        <th>24h %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var kv in _liveCrypto)
+                {
+                    var p = kv.Value;
+                    <tr>
+                        <td>@p.Symbol</td>
+                        <td>@p.PriceUsd.ToString("0.00")</td>
+                        <td style="color:@(p.Change24h >= 0 ? "green" : "red")">
+                            @(p.Change24h >= 0 ? "+" : "")@p.Change24h.ToString("0.00") %
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </section>
+    }
+    *@
 }
 
 @code {
     private MarketOverviewResponse? _overview;
+    private Dictionary<string, MarketPrice>? _liveCrypto;
     private string? _error;
 
-    protected override async Task OnInitializedAsync()
+   protected override async Task OnInitializedAsync()
+{
+    try
     {
-        try
-        {
 #if DEBUG
-            // Lokalt – Function kör på din dator
-            var url = "http://localhost:7247/api/market/overview";
+        var overviewUrl = "http://localhost:7247/api/market/overview";
 #else
-            // I Azure – prata direkt med din Function App
-            var url = "https://marketgrowth-api-astenhoff.azurewebsites.net/api/market/overview";
+        var overviewUrl =
+            "https://marketgrowth-api-astenhoff-ajhuarfah0akf5gp.swedencentral-01.azurewebsites.net/api/market/overview";
 #endif
 
-            _overview = await Http.GetFromJsonAsync<MarketOverviewResponse>(url);
-        }
-        catch (Exception ex)
-        {
-            _error = $"Kunde inte hämta marknadsdata: {ex.Message}";
-        }
+        _overview = await Http.GetFromJsonAsync<MarketOverviewResponse>(overviewUrl);
+    }
+    catch (Exception ex)
+    {
+        _error = $"Kunde inte hämta marknadsdata: {ex.Message}";
     }
 }
-
