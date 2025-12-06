@@ -211,7 +211,24 @@ namespace MarketGrowth.Api
 
                 if (!string.IsNullOrEmpty(id))
                 {
-                    asset.Sparkline7d = await GetCryptoSparklineAsync(id);
+                    var spark = await GetCryptoSparklineAsync(id);
+
+                    
+                    if (spark != null && spark.Count > 0)
+                    {
+                        asset.Sparkline7d = spark;
+                    }
+                    else
+                    {
+                        asset.Sparkline7d = GenerateRandomSparkline();
+                        _logger.LogWarning("Using fallback sparkline for {Symbol}", asset.Symbol);
+                    }
+                }
+                else
+                {
+                    
+                    asset.Sparkline7d = GenerateRandomSparkline();
+                    _logger.LogWarning("No CoinGecko id found for {Symbol}, using fallback sparkline.", asset.Symbol);
                 }
             }
 
