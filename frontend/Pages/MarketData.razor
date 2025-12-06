@@ -3,6 +3,7 @@
 @using System.Net.Http.Json
 @using System.Globalization
 @using frontend.Shared
+@using MarketGrowth.Frontend.Shared
 @inject HttpClient Http
 
 <h1>MarketGrowth</h1>
@@ -35,9 +36,13 @@ else
                         @asset.Change24h.ToString("0.##") %
                     </div>
 
-                    <!-- VIKTIG ÄNDRING -->
                     <Sparkline Data="@asset.Sparkline7d"
                                IsPositive="@(asset.Change24h >= 0)" />
+
+                    <button class="mg-fav-button"
+                            @onclick="@(() => ToggleFavoriteAsync(asset))">
+                        ☆ Save as favourite
+                    </button>
                 </div>
             }
         </div>
@@ -60,9 +65,13 @@ else
                         @asset.Change24h.ToString("0.##") %
                     </div>
 
-                    <!-- VIKTIG ÄNDRING -->
                     <Sparkline Data="@asset.Sparkline7d"
                                IsPositive="@(asset.Change24h >= 0)" />
+
+                    <button class="mg-fav-button"
+                            @onclick="@(() => ToggleFavoriteAsync(asset))">
+                        ☆ Save as favourite
+                    </button>
                 </div>
             }
         </div>
@@ -85,9 +94,13 @@ else
                         @asset.Change24h.ToString("0.##") %
                     </div>
 
-                    <!-- VIKTIG ÄNDRING -->
                     <Sparkline Data="@asset.Sparkline7d"
                                IsPositive="@(asset.Change24h >= 0)" />
+
+                    <button class="mg-fav-button"
+                            @onclick="@(() => ToggleFavoriteAsync(asset))">
+                        ☆ Save as favourite
+                    </button>
                 </div>
             }
         </div>
@@ -95,6 +108,8 @@ else
 }
 
 @code {
+    private const string DemoUserId = "demo-user-1";
+
     private MarketOverviewResponse? _overview;
     private string? _error;
 
@@ -118,5 +133,27 @@ else
         {
             _error = $"Kunde inte hämta marknadsdata: {ex.Message}";
         }
+    }
+
+    private async Task ToggleFavoriteAsync(MarketInstrument asset)
+    {
+        var request = new FavoriteAssetRequest
+        {
+            UserId = DemoUserId,
+            AssetId = asset.Symbol,
+            AssetType = asset.Category,
+            Symbol = asset.Symbol,
+            LastPrice = asset.PriceUsd
+        };
+
+#if DEBUG
+        var baseUrl = "http://localhost:7247";
+#else
+        var baseUrl = "https://marketgrowth-api-astenhoff-ajhuarfah0akf5gp.swedencentral-01.azurewebsites.net";
+#endif
+
+        var url = $"{baseUrl}/api/favorites";
+
+        await Http.PostAsJsonAsync(url, request);
     }
 }

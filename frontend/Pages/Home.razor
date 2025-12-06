@@ -4,6 +4,7 @@
 @using System.Linq
 @using System.Globalization
 @using frontend.Shared
+@using MarketGrowth.Frontend.Shared
 @inject HttpClient Http
 
 <div class="mg-home">
@@ -49,7 +50,7 @@
         <div class="mg-home-hero-right">
             <div class="mg-home-chart-card">
                 <div class="mg-home-chart-header">
-                    <span class="mg-chart-title">Overview</span>
+                    <span class="mg-chart-title">Overview 7 days chart</span>
                     <span class="mg-chart-badge">Live</span>
                 </div>
 
@@ -84,8 +85,14 @@
                             </div>
                         </div>
 
-                        <Sparkline Data="_selectedAsset.Sparkline7d"
-                                   IsPositive="_selectedAsset.Change24h >= 0" />
+                        <Sparkline Data="@_selectedAsset.Sparkline7d"
+                                   IsPositive="@(_selectedAsset.Change24h >= 0)" />
+
+                        <button class="mg-fav-button"
+                                style="margin-top:0.75rem;"
+                                @onclick="@(() => ToggleFavoriteAsync(_selectedAsset))">
+                            ☆ Save this asset as favourite
+                        </button>
                     </div>
 
                     <div class="mg-home-chart-footer">
@@ -135,8 +142,13 @@
                             @(asset.Change24h >= 0 ? "+" : "")@asset.Change24h.ToString("0.##")%
                         </span>
 
-                        <Sparkline Data="asset.Sparkline7d"
-                                   IsPositive="asset.Change24h >= 0" />
+                        <Sparkline Data="@asset.Sparkline7d"
+                                   IsPositive="@(asset.Change24h >= 0)" />
+
+                        <button class="mg-fav-button"
+                                @onclick="@(() => ToggleFavoriteAsync(asset))">
+                            ☆ Save as favourite
+                        </button>
                     </div>
                 }
 
@@ -151,8 +163,13 @@
                             @(asset.Change24h >= 0 ? "+" : "")@asset.Change24h.ToString("0.##")%
                         </span>
 
-                        <Sparkline Data="asset.Sparkline7d"
-                                   IsPositive="asset.Change24h >= 0" />
+                        <Sparkline Data="@asset.Sparkline7d"
+                                   IsPositive="@(asset.Change24h >= 0)" />
+
+                        <button class="mg-fav-button"
+                                @onclick="@(() => ToggleFavoriteAsync(asset))">
+                            ☆ Save as favourite
+                        </button>
                     </div>
                 }
             </div>
@@ -161,6 +178,8 @@
 </div>
 
 @code {
+    private const string DemoUserId = "demo-user-1";
+
     private MarketOverviewResponse? _overview;
     private List<MarketInstrument> _cryptoPreview = new();
     private List<MarketInstrument> _stockPreview = new();
@@ -210,5 +229,27 @@
 
         _selectedIndex = index;
         _selectedAsset = _allPreview[index];
+    }
+
+    private async Task ToggleFavoriteAsync(MarketInstrument asset)
+    {
+        var request = new FavoriteAssetRequest
+        {
+            UserId = DemoUserId,
+            AssetId = asset.Symbol,
+            AssetType = asset.Category,
+            Symbol = asset.Symbol,
+            LastPrice = asset.PriceUsd
+        };
+
+#if DEBUG
+        var baseUrl = "http://localhost:7247";
+#else
+        var baseUrl = "https://marketgrowth-api-astenhoff-ajhuarfah0akf5gp.swedencentral-01.azurewebsites.net";
+#endif
+
+        var url = $"{baseUrl}/api/favorites";
+
+        await Http.PostAsJsonAsync(url, request);
     }
 }
