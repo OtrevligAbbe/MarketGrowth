@@ -1,4 +1,10 @@
 ﻿@page "/"
+@using System.Net.Http
+@using System.Net.Http.Json
+@using System.Linq
+@using System.Globalization
+@using frontend.Shared
+@inject HttpClient Http
 
 <div class="mg-home">
 
@@ -27,11 +33,15 @@
             <div class="mg-home-hero-stats">
                 <div class="mg-home-stat">
                     <span class="mg-home-stat-label">Crypto assets</span>
-                    <span class="mg-home-stat-value">5</span>
+                    <span class="mg-home-stat-value">
+                        @(_overview?.Crypto?.Count ?? 0)
+                    </span>
                 </div>
                 <div class="mg-home-stat">
                     <span class="mg-home-stat-label">Stocks</span>
-                    <span class="mg-home-stat-value">5</span>
+                    <span class="mg-home-stat-value">
+                        @(_overview?.Stocks?.Count ?? 0)
+                    </span>
                 </div>
                 <div class="mg-home-stat">
                     <span class="mg-home-stat-label">Update interval</span>
@@ -41,11 +51,10 @@
         </div>
 
         <div class="mg-home-hero-right">
-            <!-- Enkel “fejk”-graf som ser snygg ut tills vi kopplar på riktiga data -->
             <div class="mg-home-chart-card">
                 <div class="mg-home-chart-header">
                     <span class="mg-chart-title">Market overview</span>
-                    <span class="mg-chart-badge">Demo data</span>
+                    <span class="mg-chart-badge">Live snapshot</span>
                 </div>
 
                 <div class="mg-home-chart">
@@ -66,39 +75,82 @@
         </div>
     </section>
 
-    <!-- SEKTION FÖR “SNABB ÖVERSIKT” (plats för riktiga 5+5 kort sen) -->
+    <!-- QUICK MARKET PREVIEW MED RIKTIG DATA -->
     <section class="mg-home-markets-preview">
         <div class="mg-home-markets-header">
             <h2>Quick market preview</h2>
-            <p>Här kommer vi senare visa 5 kryptovalutor och 5 aktier med live-data.</p>
+            <p>Live-data från Azure Functions – 5 kryptovalutor och 5 aktier.</p>
         </div>
 
-        <div class="mg-home-preview-grid">
-            <div class="mg-home-preview-card">
-                <span class="mg-preview-name">Bitcoin (BTC)</span>
-                <span class="mg-preview-price">$48 200</span>
-                <span class="mg-preview-change positive">+2.3%</span>
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <p style="color:red">@_error</p>
+        }
+        else if (_overview is null)
+        {
+            <p>Laddar live-data...</p>
+        }
+        else
+        {
+            <div class="mg-home-preview-grid">
+                @foreach (var asset in _cryptoPreview)
+                {
+                    <div class="mg-home-preview-card">
+                        <span class="mg-preview-name">@asset.Name (@asset.Symbol)</span>
+                        <span class="mg-preview-price">
+                            @asset.PriceUsd.ToString("C2", CultureInfo.GetCultureInfo("en-US"))
+                        </span>
+                        <span class="mg-preview-change @(asset.Change24h >= 0 ? "positive" : "negative")">
+                            @(asset.Change24h >= 0 ? "+" : "")@asset.Change24h.ToString("0.##")%
+                        </span>
+                    </div>
+                }
+
+                @foreach (var asset in _stockPreview)
+                {
+                    <div class="mg-home-preview-card">
+                        <span class="mg-preview-name">@asset.Name (@asset.Symbol)</span>
+                        <span class="mg-preview-price">
+                            @asset.PriceUsd.ToString("C2", CultureInfo.GetCultureInfo("en-US"))
+                        </span>
+                        <span class="mg-preview-change @(asset.Change24h >= 0 ? "positive" : "negative")">
+                            @(asset.Change24h >= 0 ? "+" : "")@asset.Change24h.ToString("0.##")%
+                        </span>
+                    </div>
+                }
             </div>
-            <div class="mg-home-preview-card">
-                <span class="mg-preview-name">Ethereum (ETH)</span>
-                <span class="mg-preview-price">$3 250</span>
-                <span class="mg-preview-change negative">-0.8%</span>
-            </div>
-            <div class="mg-home-preview-card">
-                <span class="mg-preview-name">Nasdaq 100</span>
-                <span class="mg-preview-price">17 890</span>
-                <span class="mg-preview-change positive">+0.6%</span>
-            </div>
-            <div class="mg-home-preview-card">
-                <span class="mg-preview-name">OMXS30</span>
-                <span class="mg-preview-price">2 340</span>
-                <span class="mg-preview-change positive">+1.1%</span>
-            </div>
-            <div class="mg-home-preview-card">
-                <span class="mg-preview-name">Adidas</span>
-                <span class="mg-preview-price">€186</span>
-                <span class="mg-preview-change negative">-1.4%</span>
-            </div>
-        </div>
+        }
     </section>
 </div>
+
+@code {
+    private MarketOverviewResponse? _overview;
+    private List<MarketInstrument> _cryptoPreview = new();
+    private List<MarketInstrument> _stockPreview = new();
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+#if DEBUG
+            var baseUrl = "http://localhost:7247";
+#else
+            var baseUrl = "https://marketgrowth-api-astenhoff-ajhuarfah0akf5gp.swedencentral-01.azurewebsites.net";
+#endif
+            var overviewUrl = $"{baseUrl}/api/market/overview";
+
+            _overview = await Http.GetFromJsonAsync<MarketOverviewResponse>(overviewUrl);
+
+            if (_overview is not null)
+            {
+                _cryptoPreview = _overview.Crypto.Take(5).ToList();
+                _stockPreview  = _overview.Stocks.Take(5).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Kunde inte hämta marknadsdata: {ex.Message}";
+        }
+    }
+}
