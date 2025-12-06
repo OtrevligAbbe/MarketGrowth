@@ -1,0 +1,64 @@
+@using System.Globalization
+@using System.Linq
+@using Microsoft.AspNetCore.Components
+
+<svg width="80" height="24" viewBox="0 0 80 24" preserveAspectRatio="none" class="mg-sparkline">
+    @if (PointsAttribute is not null)
+    {
+        <polyline
+            points="@PointsAttribute"
+            fill="none"
+            stroke="@StrokeColor"
+            stroke-width="2" />
+    }
+</svg>
+
+@code {
+    // Data = lista med normaliserade värden (0–1) från API:t
+    [Parameter] public IReadOnlyList<decimal>? Data { get; set; }
+
+    // Används för att välja färg (grön/röd)
+    [Parameter] public bool IsPositive { get; set; }
+
+    private string StrokeColor => IsPositive ? "#00FF88" : "#FF4D4D";
+
+    private string? PointsAttribute => BuildPoints();
+
+    private string? BuildPoints()
+    {
+        if (Data is null || Data.Count == 0)
+            return null;
+
+        var count = Data.Count;
+        if (count == 1)
+        {
+            // Om bara en punkt ? rita en rak linje i mitten
+            return "0,12 80,12";
+        }
+
+        var min = Data.Min();
+        var max = Data.Max();
+        var range = max - min;
+        if (range == 0) range = 1;
+
+        var points = new List<string>();
+
+        for (int i = 0; i < count; i++)
+        {
+            // x = jämnt utspritt mellan 0 och 80
+            var x = (double)i / (count - 1) * 80.0;
+
+            // normalisera värdet mellan 0 och 1
+            var value = (double)((Data[i] - min) / range);
+
+            // y = inverterat (0 = nederst, 1 = högst)
+            var y = 24.0 - value * 24.0;
+
+            points.Add(
+                $"{x.ToString("0.##", CultureInfo.InvariantCulture)}," +
+                $"{y.ToString("0.##", CultureInfo.InvariantCulture)}");
+        }
+
+        return string.Join(" ", points);
+    }
+}

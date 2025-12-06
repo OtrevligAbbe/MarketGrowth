@@ -711,3 +711,25 @@ code {
     .mg-card-change.mg-neg {
         color: #f97373;
     }
+
+.mg-sparkline {
+    margin-top: 0.5rem;
+    width: 100%;
+    height: 24px;
+    opacity: 0.9;
+}
+.mg-chart-dot-button {
+    border: none;
+    background: transparent;
+    color: #9ca3af;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.4rem;
+    margin-right: 0.35rem;
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+    .mg-chart-dot-button.active {
+        background: #10b981;
+        color: #020617;
+    }

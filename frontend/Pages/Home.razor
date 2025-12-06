@@ -33,15 +33,11 @@
             <div class="mg-home-hero-stats">
                 <div class="mg-home-stat">
                     <span class="mg-home-stat-label">Crypto assets</span>
-                    <span class="mg-home-stat-value">
-                        @(_overview?.Crypto?.Count ?? 0)
-                    </span>
+                    <span class="mg-home-stat-value">@(_overview?.Crypto?.Count ?? 0)</span>
                 </div>
                 <div class="mg-home-stat">
                     <span class="mg-home-stat-label">Stocks</span>
-                    <span class="mg-home-stat-value">
-                        @(_overview?.Stocks?.Count ?? 0)
-                    </span>
+                    <span class="mg-home-stat-value">@(_overview?.Stocks?.Count ?? 0)</span>
                 </div>
                 <div class="mg-home-stat">
                     <span class="mg-home-stat-label">Update interval</span>
@@ -53,24 +49,59 @@
         <div class="mg-home-hero-right">
             <div class="mg-home-chart-card">
                 <div class="mg-home-chart-header">
-                    <span class="mg-chart-title">Market overview</span>
-                    <span class="mg-chart-badge">Live snapshot</span>
+                    <span class="mg-chart-title">Overview</span>
+                    <span class="mg-chart-badge">Live</span>
                 </div>
 
-                <div class="mg-home-chart">
-                    <div class="mg-home-chart-line"></div>
-                    <div class="mg-home-chart-dot dot-1"></div>
-                    <div class="mg-home-chart-dot dot-2"></div>
-                    <div class="mg-home-chart-dot dot-3"></div>
-                    <div class="mg-home-chart-dot dot-4"></div>
-                </div>
+                @if (!string.IsNullOrEmpty(_error))
+                {
+                    <div class="mg-home-chart-empty">
+                        @_error
+                    </div>
+                }
+                else if (_selectedAsset is null)
+                {
+                    <div class="mg-home-chart-empty">
+                        Loading live overview...
+                    </div>
+                }
+                else
+                {
+                    <div class="mg-home-chart-asset">
+                        <div class="mg-home-chart-asset-header">
+                            <span class="mg-asset-symbol">@_selectedAsset.Symbol</span>
+                            <span class="mg-asset-name">@_selectedAsset.Name</span>
+                        </div>
 
-                <div class="mg-home-chart-footer">
-                    <span>BTC</span>
-                    <span>ETH</span>
-                    <span>NASDAQ</span>
-                    <span>OMXS30</span>
-                </div>
+                        <div class="mg-home-chart-asset-main">
+                            <div class="mg-asset-price">
+                                @_selectedAsset.PriceUsd.ToString(
+                                    "C2",
+                                    CultureInfo.GetCultureInfo("en-US"))
+                            </div>
+                            <div class="mg-asset-change @( _selectedAsset.Change24h >= 0 ? "mg-pos" : "mg-neg")">
+                                @(_selectedAsset.Change24h >= 0 ? "+" : "")@_selectedAsset.Change24h.ToString("0.##")%
+                            </div>
+                        </div>
+
+                        <Sparkline Data="_selectedAsset.Sparkline7d"
+                                   IsPositive="_selectedAsset.Change24h >= 0" />
+                    </div>
+
+                    <div class="mg-home-chart-footer">
+                        @for (var i = 0; i < _allPreview.Count; i++)
+                        {
+                            var asset = _allPreview[i];
+                            var isActive = i == _selectedIndex;
+
+                            <button type="button"
+                                    class="mg-chart-dot-button @(isActive ? "active" : "")"
+                                    @onclick="@(() => SelectAsset(i))">
+                                @asset.Symbol
+                            </button>
+                        }
+                    </div>
+                }
             </div>
         </div>
     </section>
@@ -103,6 +134,9 @@
                         <span class="mg-preview-change @(asset.Change24h >= 0 ? "positive" : "negative")">
                             @(asset.Change24h >= 0 ? "+" : "")@asset.Change24h.ToString("0.##")%
                         </span>
+
+                        <Sparkline Data="asset.Sparkline7d"
+                                   IsPositive="asset.Change24h >= 0" />
                     </div>
                 }
 
@@ -116,6 +150,9 @@
                         <span class="mg-preview-change @(asset.Change24h >= 0 ? "positive" : "negative")">
                             @(asset.Change24h >= 0 ? "+" : "")@asset.Change24h.ToString("0.##")%
                         </span>
+
+                        <Sparkline Data="asset.Sparkline7d"
+                                   IsPositive="asset.Change24h >= 0" />
                     </div>
                 }
             </div>
@@ -127,6 +164,9 @@
     private MarketOverviewResponse? _overview;
     private List<MarketInstrument> _cryptoPreview = new();
     private List<MarketInstrument> _stockPreview = new();
+    private List<MarketInstrument> _allPreview = new();
+    private MarketInstrument? _selectedAsset;
+    private int _selectedIndex;
     private string? _error;
 
     protected override async Task OnInitializedAsync()
@@ -144,13 +184,31 @@
 
             if (_overview is not null)
             {
+                // 5 krypton + 5 aktier för preview
                 _cryptoPreview = _overview.Crypto.Take(5).ToList();
                 _stockPreview  = _overview.Stocks.Take(5).ToList();
+                _allPreview    = _cryptoPreview.Concat(_stockPreview).ToList();
+
+                if (_allPreview.Count > 0)
+                {
+                    // Välj en random tillgång i hero-kortet
+                    var rng = new Random();
+                    _selectedIndex = rng.Next(0, _allPreview.Count);
+                    _selectedAsset = _allPreview[_selectedIndex];
+                }
             }
         }
         catch (Exception ex)
         {
             _error = $"Kunde inte hämta marknadsdata: {ex.Message}";
         }
+    }
+
+    private void SelectAsset(int index)
+    {
+        if (index < 0 || index >= _allPreview.Count) return;
+
+        _selectedIndex = index;
+        _selectedAsset = _allPreview[index];
     }
 }

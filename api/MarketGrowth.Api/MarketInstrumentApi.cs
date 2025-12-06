@@ -1,19 +1,14 @@
-﻿namespace MarketGrowth.Api;
+﻿using System.Collections.Generic;
 
-public class MarketInstrument
+namespace MarketGrowth.Api
 {
-    // BTC, ETH, AAPL, SPY osv
-    public string Symbol { get; set; } = string.Empty;
-
-    // Bitcoin, Apple, S&P 500 osv
-    public string Name { get; set; } = string.Empty;
-
-    // "Crypto", "Stock", "Index"
-    public string Category { get; set; } = string.Empty;
-
-    // Pris i USD
-    public decimal PriceUsd { get; set; }
-
-    // 24h förändring i %
-    public decimal Change24h { get; set; }
+    public class MarketInstrument
+    {
+        public string Symbol { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public decimal PriceUsd { get; set; }
+        public decimal Change24h { get; set; }
+        public List<decimal> Sparkline7d { get; set; } = new();
+    }
 }

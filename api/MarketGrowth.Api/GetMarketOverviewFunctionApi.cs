@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -56,6 +58,7 @@ namespace MarketGrowth.Api
             return response;
         }
 
+        // KRYPTOVALUTOR (CoinGecko)
         private async Task<List<MarketInstrument>> FetchCryptoAsync()
         {
             var url =
@@ -75,6 +78,25 @@ namespace MarketGrowth.Api
             AddCoin(root, "solana", "SOL", "Solana", list);
             AddCoin(root, "ripple", "XRP", "Ripple", list);
             AddCoin(root, "litecoin", "LTC", "Litecoin", list);
+
+            // Hämta 7-dagars sparkline per coin
+            foreach (var asset in list)
+            {
+                var id = asset.Symbol.ToUpperInvariant() switch
+                {
+                    "BTC" => "bitcoin",
+                    "ETH" => "ethereum",
+                    "SOL" => "solana",
+                    "XRP" => "ripple",
+                    "LTC" => "litecoin",
+                    _ => ""
+                };
+
+                if (!string.IsNullOrEmpty(id))
+                {
+                    asset.Sparkline7d = await GetCryptoSparklineAsync(id);
+                }
+            }
 
             return list;
         }
@@ -97,10 +119,48 @@ namespace MarketGrowth.Api
                 Symbol = symbol,
                 Name = name,
                 PriceUsd = price,
-                Change24h = change
+                Change24h = Math.Round(change, 2)
             });
         }
 
+        // CoinGecko /market_chart svar
+        private class CoinGeckoMarketChartResponse
+        {
+            [JsonPropertyName("prices")]
+            public List<List<decimal>> Prices { get; set; } = new();
+        }
+
+        private async Task<List<decimal>> GetCryptoSparklineAsync(string coinId)
+        {
+            try
+            {
+                var url =
+                    $"https://api.coingecko.com/api/v3/coins/{coinId}/market_chart?vs_currency=usd&days=7";
+
+                var json = await _http.GetStringAsync(url);
+                var data = JsonSerializer.Deserialize<CoinGeckoMarketChartResponse>(
+                    json,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (data?.Prices == null || data.Prices.Count == 0)
+                    return new List<decimal>();
+
+                // Plocka bara ut priset (index 1)
+                var prices = data.Prices
+                    .Where(p => p.Count >= 2)
+                    .Select(p => p[1])
+                    .ToList();
+
+                return NormalizeToUnit(prices);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to fetch sparkline for {CoinId}", coinId);
+                return new List<decimal>();
+            }
+        }
+
+        // AKTIER & INDEX (Alpha Vantage)
         private async Task<List<MarketInstrument>> FetchStocksAsync()
         {
             var symbols = new[]
@@ -152,7 +212,7 @@ namespace MarketGrowth.Api
         {
             if (string.IsNullOrWhiteSpace(_alphaKey))
             {
-                _logger.LogWarning("ALPHA_VANTAGE_KEY is not configured.");
+                _logger.LogWarning("ALPHAVANTAGE_API_KEY is not configured.");
                 return null;
             }
 
@@ -177,6 +237,7 @@ namespace MarketGrowth.Api
                     CultureInfo.InvariantCulture,
                     out var price))
             {
+                _logger.LogWarning("Could not parse price for {Symbol}", symbol);
                 return null;
             }
 
@@ -191,7 +252,7 @@ namespace MarketGrowth.Api
                 changePercent = 0;
             }
 
-            return new MarketInstrument
+            var instrument = new MarketInstrument
             {
                 Category = category,
                 Symbol = symbol,
@@ -199,6 +260,73 @@ namespace MarketGrowth.Api
                 PriceUsd = price,
                 Change24h = changePercent
             };
+
+            // Hämta 7-dagars sparkline för både aktier & index
+            instrument.Sparkline7d = await GetAlphaSparklineAsync(symbol);
+
+            return instrument;
+        }
+
+        private async Task<List<decimal>> GetAlphaSparklineAsync(string symbol)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(_alphaKey))
+                    return new List<decimal>();
+
+                var url =
+                    $"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&apikey={_alphaKey}";
+
+                var json = await _http.GetStringAsync(url);
+                using var doc = JsonDocument.Parse(json);
+
+                if (!doc.RootElement.TryGetProperty("Time Series (Daily)", out var series))
+                    return new List<decimal>();
+
+                var prices = series
+                    .EnumerateObject()
+                    .OrderByDescending(p => p.Name) // "2025-12-06" osv
+                    .Take(7)
+                    .Select(p =>
+                    {
+                        var closeStr = p.Value.GetProperty("4. close").GetString();
+                        return decimal.TryParse(
+                            closeStr,
+                            NumberStyles.Any,
+                            CultureInfo.InvariantCulture,
+                            out var close)
+                            ? close
+                            : (decimal?)null;
+                    })
+                    .Where(p => p.HasValue)
+                    .Select(p => p!.Value)
+                    .Reverse() // äldst -> nyast för snygg graf
+                    .ToList();
+
+                return NormalizeToUnit(prices);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to fetch Alpha sparkline for {Symbol}", symbol);
+                return new List<decimal>();
+            }
+        }
+
+        // Hjälpmetod för normalisering
+
+        private static List<decimal> NormalizeToUnit(List<decimal> prices)
+        {
+            if (prices == null || prices.Count == 0)
+                return new List<decimal>();
+
+            var min = prices.Min();
+            var max = prices.Max();
+            var range = max - min;
+            if (range == 0) range = 1;
+
+            return prices
+                .Select(p => (p - min) / range)
+                .ToList();
         }
     }
 }
