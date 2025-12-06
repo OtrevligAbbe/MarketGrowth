@@ -77,7 +77,7 @@ else
         </div>
     </section>
 
-    @* Extra: visa live-crypto om det behövs senare
+    @* Extra: visa live-crypto om du vill senare
     @if (_liveCrypto is not null)
     {
         <section class="mg-section">
@@ -114,21 +114,29 @@ else
     private Dictionary<string, MarketPrice>? _liveCrypto;
     private string? _error;
 
-   protected override async Task OnInitializedAsync()
-{
-    try
+    protected override async Task OnInitializedAsync()
     {
+        try
+        {
 #if DEBUG
-        var overviewUrl = "http://localhost:7247/api/market/overview";
+            // Lokalt - Function körs på din dator
+            var baseUrl = "http://localhost:7247";
 #else
-        var overviewUrl =
-            "https://marketgrowth-api-astenhoff-ajhuarfah0akf5gp.swedencentral-01.azurewebsites.net/api/market/overview";
+            // I Azure - prata direkt med din Function App
+            var baseUrl = "https://marketgrowth-api-astenhoff-ajhuarfah0akf5gp.swedencentral-01.azurewebsites.net";
 #endif
 
-        _overview = await Http.GetFromJsonAsync<MarketOverviewResponse>(overviewUrl);
-    }
-    catch (Exception ex)
-    {
-        _error = $"Kunde inte hämta marknadsdata: {ex.Message}";
+            var overviewUrl = $"{baseUrl}/api/market/overview";
+            var cryptoUrl = $"{baseUrl}/api/market/crypto";
+
+            _overview = await Http.GetFromJsonAsync<MarketOverviewResponse>(overviewUrl);
+
+            // Den här raden kan du kommentera bort om du inte använder live-crypto än
+            _liveCrypto = await Http.GetFromJsonAsync<Dictionary<string, MarketPrice>>(cryptoUrl);
+        }
+        catch (Exception ex)
+        {
+            _error = $"Kunde inte hämta marknadsdata: {ex.Message}";
+        }
     }
 }
