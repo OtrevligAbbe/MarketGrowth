@@ -18,11 +18,15 @@ namespace MarketGrowth.Api
         private readonly ILogger<GetMarketOverviewFunction> _logger;
         private readonly string _alphaKey;
 
-        // Enkla cache-fält för aktier och index (så vi inte spammar API:t)
+        // Cache för aktier och index
         private static List<MarketInstrument> _cachedStocks = new();
         private static List<MarketInstrument> _cachedIndices = new();
         private static DateTime _stocksLastUpdated = DateTime.MinValue;
         private static DateTime _indicesLastUpdated = DateTime.MinValue;
+
+
+        private static MarketOverviewResponse? _lastSnapshot;
+
         private static readonly object _cacheLock = new();
 
         private static readonly Random _random = new();
@@ -49,22 +53,125 @@ namespace MarketGrowth.Api
             {
                 var result = new MarketOverviewResponse
                 {
-                    Crypto = await FetchCryptoAsync(),
-                    Stocks = await FetchStocksAsync(),
-                    Indices = await FetchIndicesAsync()
+                    Crypto = new List<MarketInstrument>(),
+                    Stocks = new List<MarketInstrument>(),
+                    Indices = new List<MarketInstrument>()
                 };
 
-                response.StatusCode = HttpStatusCode.OK;
-                await response.WriteAsJsonAsync(result);
+                // 1. Crypto (CoinGecko med riktig sparkline)
+                try
+                {
+                    var crypto = await FetchCryptoAsync();
+                    if (crypto.Count > 0)
+                    {
+                        result.Crypto = crypto;
+                    }
+                    else if (_lastSnapshot?.Crypto is { Count: > 0 })
+                    {
+                        // om vi får tom lista men har gamla data → använd gamla
+                        result.Crypto = _lastSnapshot.Crypto;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to fetch crypto data, using snapshot cache if available.");
+                    if (_lastSnapshot?.Crypto is { Count: > 0 })
+                    {
+                        result.Crypto = _lastSnapshot.Crypto;
+                    }
+                }
+
+                // 2. Stocks (Alpha Vantage + intern cache + fejk-sparkline)
+                try
+                {
+                    var stocks = await FetchStocksAsync();
+                    if (stocks.Count > 0)
+                    {
+                        result.Stocks = stocks;
+                    }
+                    else if (_lastSnapshot?.Stocks is { Count: > 0 })
+                    {
+                        result.Stocks = _lastSnapshot.Stocks;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to fetch stocks, using snapshot cache if available.");
+                    if (_lastSnapshot?.Stocks is { Count: > 0 })
+                    {
+                        result.Stocks = _lastSnapshot.Stocks;
+                    }
+                }
+
+                // 3. Indices (Alpha Vantage + intern cache + fejk-sparkline)
+                try
+                {
+                    var indices = await FetchIndicesAsync();
+                    if (indices.Count > 0)
+                    {
+                        result.Indices = indices;
+                    }
+                    else if (_lastSnapshot?.Indices is { Count: > 0 })
+                    {
+                        result.Indices = _lastSnapshot.Indices;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to fetch indices, using snapshot cache if available.");
+                    if (_lastSnapshot?.Indices is { Count: > 0 })
+                    {
+                        result.Indices = _lastSnapshot.Indices;
+                    }
+                }
+
+                var hasAnyData =
+                    (result.Crypto?.Count ?? 0) > 0 ||
+                    (result.Stocks?.Count ?? 0) > 0 ||
+                    (result.Indices?.Count ?? 0) > 0;
+
+                if (hasAnyData)
+                {
+                    // Uppdatera snapshot med allt vi lyckades få fram
+                    lock (_cacheLock)
+                    {
+                        _lastSnapshot = result;
+                    }
+
+                    response.StatusCode = HttpStatusCode.OK;
+                    await response.WriteAsJsonAsync(result);
+                    return response;
+                }
+
+                // Ingen ny data, men tidigare snapshot finns
+                if (_lastSnapshot is not null)
+                {
+                    response.StatusCode = HttpStatusCode.OK;
+                    await response.WriteAsJsonAsync(_lastSnapshot);
+                    return response;
+                }
+
+                // Absolut ingen data någonsin
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                await response.WriteStringAsync("No market data available.");
+                return response;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in GetMarketOverview");
+                _logger.LogError(ex, "Fatal error in GetMarketOverview");
+
+                // Vid total krasch försök ändå skicka snapshot om vi har en
+                if (_lastSnapshot is not null)
+                {
+                    response.StatusCode = HttpStatusCode.OK;
+                    await response.WriteAsJsonAsync(_lastSnapshot);
+                    return response;
+                }
+
                 response.StatusCode = HttpStatusCode.InternalServerError;
                 await response.WriteStringAsync("Internal server error.");
+                return response;
             }
-
-            return response;
         }
 
         // KRYPTOVALUTOR (CoinGecko)
@@ -169,7 +276,7 @@ namespace MarketGrowth.Api
             }
         }
 
-        // AKTIER & INDEX (Alpha Vantage)
+        //AKTIER & INDEX (Alpha Vantage)
 
         private async Task<List<MarketInstrument>> FetchStocksAsync()
         {
@@ -178,7 +285,6 @@ namespace MarketGrowth.Api
                 if (DateTime.UtcNow - _stocksLastUpdated < TimeSpan.FromMinutes(1) &&
                     _cachedStocks.Count > 0)
                 {
-                    // Använd cache om den är färsk
                     return _cachedStocks;
                 }
             }
@@ -210,7 +316,7 @@ namespace MarketGrowth.Api
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to fetch stocks, falling back to cache.");
+                _logger.LogWarning(ex, "Failed to fetch stocks, falling back to stocks cache.");
                 lock (_cacheLock)
                 {
                     return _cachedStocks;
@@ -258,7 +364,7 @@ namespace MarketGrowth.Api
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to fetch indices, falling back to cache.");
+                _logger.LogWarning(ex, "Failed to fetch indices, falling back to indices cache.");
                 lock (_cacheLock)
                 {
                     return _cachedIndices;
@@ -285,7 +391,7 @@ namespace MarketGrowth.Api
             var json = await _http.GetStringAsync(url);
             using var doc = JsonDocument.Parse(json);
 
-            // Om vi fått ett "Note" tillbaka betyder det oftast rate limit
+           
             if (doc.RootElement.TryGetProperty("Note", out var noteEl))
             {
                 _logger.LogWarning("Alpha Vantage note for {Symbol}: {Note}", symbol, noteEl.GetString());
@@ -299,7 +405,7 @@ namespace MarketGrowth.Api
             }
 
             var priceStr = quote.GetProperty("05. price").GetString();
-            var changePercentStr = quote.GetProperty("10. change percent").GetString(); // t.ex. "1.23%"
+            var changePercentStr = quote.GetProperty("10. change percent").GetString();
 
             if (!decimal.TryParse(
                     priceStr,
@@ -329,14 +435,13 @@ namespace MarketGrowth.Api
                 Name = name,
                 PriceUsd = price,
                 Change24h = changePercent,
-                // För aktier & index: simulera sparkline så vi slipper extra API-anrop
                 Sparkline7d = GenerateRandomSparkline()
             };
 
             return instrument;
         }
 
-        // Hjälpmetoder
+        //Hjälpmetoder
 
         private static List<decimal> NormalizeToUnit(List<decimal> prices)
         {

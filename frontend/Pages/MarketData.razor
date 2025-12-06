@@ -35,8 +35,9 @@ else
                         @asset.Change24h.ToString("0.##") %
                     </div>
 
-                    <Sparkline Data="asset.Sparkline7d"
-                               IsPositive="asset.Change24h >= 0" />
+                    <!-- VIKTIG ÄNDRING -->
+                    <Sparkline Data="@asset.Sparkline7d"
+                               IsPositive="@(asset.Change24h >= 0)" />
                 </div>
             }
         </div>
@@ -59,8 +60,9 @@ else
                         @asset.Change24h.ToString("0.##") %
                     </div>
 
-                    <Sparkline Data="asset.Sparkline7d"
-                               IsPositive="asset.Change24h >= 0" />
+                    <!-- VIKTIG ÄNDRING -->
+                    <Sparkline Data="@asset.Sparkline7d"
+                               IsPositive="@(asset.Change24h >= 0)" />
                 </div>
             }
         </div>
@@ -83,8 +85,9 @@ else
                         @asset.Change24h.ToString("0.##") %
                     </div>
 
-                    <Sparkline Data="asset.Sparkline7d"
-                               IsPositive="asset.Change24h >= 0" />
+                    <!-- VIKTIG ÄNDRING -->
+                    <Sparkline Data="@asset.Sparkline7d"
+                               IsPositive="@(asset.Change24h >= 0)" />
                 </div>
             }
         </div>
