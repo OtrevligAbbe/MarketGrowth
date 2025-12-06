@@ -18,6 +18,15 @@ namespace MarketGrowth.Api
         private readonly ILogger<GetMarketOverviewFunction> _logger;
         private readonly string _alphaKey;
 
+        // Enkla cache-fält för aktier och index (så vi inte spammar API:t)
+        private static List<MarketInstrument> _cachedStocks = new();
+        private static List<MarketInstrument> _cachedIndices = new();
+        private static DateTime _stocksLastUpdated = DateTime.MinValue;
+        private static DateTime _indicesLastUpdated = DateTime.MinValue;
+        private static readonly object _cacheLock = new();
+
+        private static readonly Random _random = new();
+
         public GetMarketOverviewFunction(
             IHttpClientFactory httpClientFactory,
             ILogger<GetMarketOverviewFunction> logger)
@@ -59,6 +68,7 @@ namespace MarketGrowth.Api
         }
 
         // KRYPTOVALUTOR (CoinGecko)
+
         private async Task<List<MarketInstrument>> FetchCryptoAsync()
         {
             var url =
@@ -79,7 +89,7 @@ namespace MarketGrowth.Api
             AddCoin(root, "ripple", "XRP", "Ripple", list);
             AddCoin(root, "litecoin", "LTC", "Litecoin", list);
 
-            // Hämta 7-dagars sparkline per coin
+            // Hämta 7-dagars sparkline per coin från CoinGecko
             foreach (var asset in list)
             {
                 var id = asset.Symbol.ToUpperInvariant() switch
@@ -145,7 +155,6 @@ namespace MarketGrowth.Api
                 if (data?.Prices == null || data.Prices.Count == 0)
                     return new List<decimal>();
 
-                // Plocka bara ut priset (index 1)
                 var prices = data.Prices
                     .Where(p => p.Count >= 2)
                     .Select(p => p[1])
@@ -155,14 +164,25 @@ namespace MarketGrowth.Api
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to fetch sparkline for {CoinId}", coinId);
+                _logger.LogWarning(ex, "Failed to fetch crypto sparkline for {CoinId}", coinId);
                 return new List<decimal>();
             }
         }
 
         // AKTIER & INDEX (Alpha Vantage)
+
         private async Task<List<MarketInstrument>> FetchStocksAsync()
         {
+            lock (_cacheLock)
+            {
+                if (DateTime.UtcNow - _stocksLastUpdated < TimeSpan.FromMinutes(1) &&
+                    _cachedStocks.Count > 0)
+                {
+                    // Använd cache om den är färsk
+                    return _cachedStocks;
+                }
+            }
+
             var symbols = new[]
             {
                 ("AAPL", "Apple"),
@@ -174,10 +194,27 @@ namespace MarketGrowth.Api
 
             var list = new List<MarketInstrument>();
 
-            foreach (var (symbol, name) in symbols)
+            try
             {
-                var m = await FetchAlphaGlobalQuoteAsync(symbol, name, "Stock");
-                if (m != null) list.Add(m);
+                foreach (var (symbol, name) in symbols)
+                {
+                    var m = await FetchAlphaGlobalQuoteAsync(symbol, name, "Stock");
+                    if (m != null) list.Add(m);
+                }
+
+                lock (_cacheLock)
+                {
+                    _cachedStocks = list;
+                    _stocksLastUpdated = DateTime.UtcNow;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to fetch stocks, falling back to cache.");
+                lock (_cacheLock)
+                {
+                    return _cachedStocks;
+                }
             }
 
             return list;
@@ -185,6 +222,15 @@ namespace MarketGrowth.Api
 
         private async Task<List<MarketInstrument>> FetchIndicesAsync()
         {
+            lock (_cacheLock)
+            {
+                if (DateTime.UtcNow - _indicesLastUpdated < TimeSpan.FromMinutes(1) &&
+                    _cachedIndices.Count > 0)
+                {
+                    return _cachedIndices;
+                }
+            }
+
             var symbols = new[]
             {
                 ("SPY", "S&P 500"),
@@ -196,10 +242,27 @@ namespace MarketGrowth.Api
 
             var list = new List<MarketInstrument>();
 
-            foreach (var (symbol, name) in symbols)
+            try
             {
-                var m = await FetchAlphaGlobalQuoteAsync(symbol, name, "Index");
-                if (m != null) list.Add(m);
+                foreach (var (symbol, name) in symbols)
+                {
+                    var m = await FetchAlphaGlobalQuoteAsync(symbol, name, "Index");
+                    if (m != null) list.Add(m);
+                }
+
+                lock (_cacheLock)
+                {
+                    _cachedIndices = list;
+                    _indicesLastUpdated = DateTime.UtcNow;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to fetch indices, falling back to cache.");
+                lock (_cacheLock)
+                {
+                    return _cachedIndices;
+                }
             }
 
             return list;
@@ -221,6 +284,13 @@ namespace MarketGrowth.Api
 
             var json = await _http.GetStringAsync(url);
             using var doc = JsonDocument.Parse(json);
+
+            // Om vi fått ett "Note" tillbaka betyder det oftast rate limit
+            if (doc.RootElement.TryGetProperty("Note", out var noteEl))
+            {
+                _logger.LogWarning("Alpha Vantage note for {Symbol}: {Note}", symbol, noteEl.GetString());
+                return null;
+            }
 
             if (!doc.RootElement.TryGetProperty("Global Quote", out var quote))
             {
@@ -258,61 +328,15 @@ namespace MarketGrowth.Api
                 Symbol = symbol,
                 Name = name,
                 PriceUsd = price,
-                Change24h = changePercent
+                Change24h = changePercent,
+                // För aktier & index: simulera sparkline så vi slipper extra API-anrop
+                Sparkline7d = GenerateRandomSparkline()
             };
-
-            // Hämta 7-dagars sparkline för både aktier & index
-            instrument.Sparkline7d = await GetAlphaSparklineAsync(symbol);
 
             return instrument;
         }
 
-        private async Task<List<decimal>> GetAlphaSparklineAsync(string symbol)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(_alphaKey))
-                    return new List<decimal>();
-
-                var url =
-                    $"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&apikey={_alphaKey}";
-
-                var json = await _http.GetStringAsync(url);
-                using var doc = JsonDocument.Parse(json);
-
-                if (!doc.RootElement.TryGetProperty("Time Series (Daily)", out var series))
-                    return new List<decimal>();
-
-                var prices = series
-                    .EnumerateObject()
-                    .OrderByDescending(p => p.Name) // "2025-12-06" osv
-                    .Take(7)
-                    .Select(p =>
-                    {
-                        var closeStr = p.Value.GetProperty("4. close").GetString();
-                        return decimal.TryParse(
-                            closeStr,
-                            NumberStyles.Any,
-                            CultureInfo.InvariantCulture,
-                            out var close)
-                            ? close
-                            : (decimal?)null;
-                    })
-                    .Where(p => p.HasValue)
-                    .Select(p => p!.Value)
-                    .Reverse() // äldst -> nyast för snygg graf
-                    .ToList();
-
-                return NormalizeToUnit(prices);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to fetch Alpha sparkline for {Symbol}", symbol);
-                return new List<decimal>();
-            }
-        }
-
-        // Hjälpmetod för normalisering
+        // Hjälpmetoder
 
         private static List<decimal> NormalizeToUnit(List<decimal> prices)
         {
@@ -327,6 +351,23 @@ namespace MarketGrowth.Api
             return prices
                 .Select(p => (p - min) / range)
                 .ToList();
+        }
+
+        private static List<decimal> GenerateRandomSparkline()
+        {
+            var result = new List<decimal>();
+            decimal current = 0.5m;
+
+            for (int i = 0; i < 20; i++)
+            {
+                var step = (decimal)(_random.NextDouble() - 0.5) * 0.2m; // små hopp upp/ner
+                current += step;
+                if (current < 0m) current = 0m;
+                if (current > 1m) current = 1m;
+                result.Add(current);
+            }
+
+            return result;
         }
     }
 }
