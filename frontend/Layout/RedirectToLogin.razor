@@ -1,9 +1,7 @@
-﻿@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
-@inject NavigationManager Navigation
+﻿@page "/authentication/{action}"
+
+<h3>Authentication route is handled by Authentication.razor</h3>
 
 @code {
-    protected override void OnInitialized()
-    {
-        Navigation.NavigateToLogin("authentication/login");
-    }
+    [Parameter] public string? Action { get; set; }
 }

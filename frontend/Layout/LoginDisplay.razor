@@ -1,19 +1,12 @@
-﻿@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
-@inject NavigationManager Navigation
+﻿@using frontend.Shared
+@inject AuthState Auth
 
-<AuthorizeView>
-    <Authorized>
-        Hello, @context.User.Identity?.Name!
-        <button class="nav-link btn btn-link" @onclick="BeginLogOut">Log out</button>
-    </Authorized>
-    <NotAuthorized>
-        <a href="authentication/login">Log in</a>
-    </NotAuthorized>
-</AuthorizeView>
-
-@code{
-    public void BeginLogOut()
-    {
-        Navigation.NavigateToLogout("authentication/logout");
-    }
+@if (Auth.IsLoggedIn)
+{
+    <span>Hello, @Auth.UserId!</span>
+    <a href="/authentication" style="margin-left:0.5rem;">(Manage)</a>
+}
+else
+{
+    <a href="/authentication">Log in</a>
 }

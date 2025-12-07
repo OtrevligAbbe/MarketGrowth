@@ -1,7 +1,44 @@
-﻿@page "/authentication/{action}"
-@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
-<RemoteAuthenticatorView Action="@Action" />
+﻿@page "/authentication"
+@using frontend.Shared
+@inject AuthState Auth
+@inject NavigationManager Nav
 
-@code{
-    [Parameter] public string? Action { get; set; }
+<h3>Log in</h3>
+
+@if (Auth.IsLoggedIn)
+{
+    <p>You are logged in as <b>@Auth.UserId</b>.</p>
+    <button @onclick="Logout">Log out</button>
+}
+else
+{
+    <input @bind="_userId" placeholder="Choose a username or email" />
+    <button @onclick="Login">Log in</button>
+}
+
+@code {
+    private string _userId = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Auth.InitializeAsync();
+        _userId = Auth.UserId ?? string.Empty;
+    }
+
+    private async Task Login()
+    {
+        if (string.IsNullOrWhiteSpace(_userId))
+            return;
+
+        await Auth.LoginAsync(_userId);
+        Nav.NavigateTo("/");
+    }
+
+    private async Task Logout()
+    {
+        await Auth.LogoutAsync();
+        _userId = string.Empty;
+        await Auth.LogoutAsync();
+        Nav.NavigateTo("/");
+    }
 }

@@ -44,6 +44,10 @@
                     <span class="mg-home-stat-label">Update interval</span>
                     <span class="mg-home-stat-value">60s</span>
                 </div>
+                <div class="mg-home-stat">
+                    <span class="mg-home-stat-label">Favourites</span>
+                    <span class="mg-home-stat-value">@_favoriteKeys.Count</span>
+                </div>
             </div>
         </div>
 
@@ -180,7 +184,9 @@
     </section>
 </div>
 
-@code {
+@code
+{
+    // just nu: en demo-user-id (sen kan vi koppla till riktiga AuthState.UserId)
     private const string DemoUserId = "demo-user-1";
 
     private MarketOverviewResponse? _overview;
@@ -191,7 +197,6 @@
     private int _selectedIndex;
     private string? _error;
 
-    // Håller koll på favoriter i UI (samma princip som på /marketdata)
     private readonly HashSet<string> _favoriteKeys = new();
 
     protected override async Task OnInitializedAsync()
@@ -209,19 +214,19 @@
 
             if (_overview is not null)
             {
-                // 5 krypton + 5 aktier för preview
                 _cryptoPreview = _overview.Crypto.Take(5).ToList();
                 _stockPreview  = _overview.Stocks.Take(5).ToList();
                 _allPreview    = _cryptoPreview.Concat(_stockPreview).ToList();
 
                 if (_allPreview.Count > 0)
                 {
-                    // Välj en random tillgång i hero-kortet
                     var rng = new Random();
                     _selectedIndex = rng.Next(0, _allPreview.Count);
                     _selectedAsset = _allPreview[_selectedIndex];
                 }
             }
+
+            await LoadFavoritesAsync(baseUrl);
         }
         catch (Exception ex)
         {
@@ -243,18 +248,56 @@
     private bool IsFavorite(MarketInstrument asset)
         => _favoriteKeys.Contains(GetAssetKey(asset));
 
+    private async Task LoadFavoritesAsync(string baseUrl)
+    {
+        try
+        {
+            var url = $"{baseUrl}/api/favorites/{DemoUserId}";
+
+            var favorites = await Http.GetFromJsonAsync<List<FavoriteAssetRequest>>(url)
+                           ?? new List<FavoriteAssetRequest>();
+
+            _favoriteKeys.Clear();
+
+            foreach (var fav in favorites)
+            {
+                var key = $"{fav.AssetType}:{fav.Symbol}";
+                _favoriteKeys.Add(key);
+            }
+        }
+        catch
+        {
+            // ignorerar fel här, UI får funka ändå
+        }
+    }
+
     private async Task ToggleFavoriteAsync(MarketInstrument asset)
     {
         var key = GetAssetKey(asset);
 
-        // Om redan favorit → toggla bara bort i UI (Cosmos-raden får ligga kvar)
+#if DEBUG
+        var baseUrl = "http://localhost:7247";
+#else
+        var baseUrl = "https://marketgrowth-api-astenhoff-ajhuarfah0akf5gp.swedencentral-01.azurewebsites.net";
+#endif
+
         if (_favoriteKeys.Contains(key))
         {
-            _favoriteKeys.Remove(key);
+            var deleteUrl = $"{baseUrl}/api/favorites/{DemoUserId}/{asset.Symbol}";
+
+            try
+            {
+                await Http.DeleteAsync(deleteUrl);
+                _favoriteKeys.Remove(key);
+            }
+            catch (Exception ex)
+            {
+                _error = $"Kunde inte ta bort favorit: {ex.Message}";
+            }
+
             return;
         }
 
-        // Markera som favorit i UI
         _favoriteKeys.Add(key);
 
         var request = new FavoriteAssetRequest
@@ -266,12 +309,6 @@
             LastPrice = asset.PriceUsd
         };
 
-#if DEBUG
-        var baseUrl = "http://localhost:7247";
-#else
-        var baseUrl = "https://marketgrowth-api-astenhoff-ajhuarfah0akf5gp.swedencentral-01.azurewebsites.net";
-#endif
-
         var url = $"{baseUrl}/api/favorites";
 
         try
@@ -281,7 +318,7 @@
         catch (Exception ex)
         {
             _error = $"Kunde inte spara favorit: {ex.Message}";
-            _favoriteKeys.Remove(key); // rulla tillbaka UI-state om det blev fel
+            _favoriteKeys.Remove(key);
         }
     }
 }

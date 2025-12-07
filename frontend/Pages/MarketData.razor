@@ -5,9 +5,18 @@
 @using frontend.Shared
 @using MarketGrowth.Frontend.Shared
 @inject HttpClient Http
+@inject AuthState AuthState
 
 <h1>MarketGrowth</h1>
-<p class="mg-subtitle">Quick market preview with live data</p>
+<p class="mg-subtitle">
+    Quick market preview with live data
+    @if (_favoriteKeys.Count > 0)
+    {
+        <span style="margin-left:1rem; font-size:0.9rem; opacity:0.8;">
+            • @(_favoriteKeys.Count) favourites saved
+        </span>
+    }
+</p>
 
 @if (!string.IsNullOrEmpty(_error))
 {
@@ -39,7 +48,6 @@ else
                     <Sparkline Data="@asset.Sparkline7d"
                                IsPositive="@(asset.Change24h >= 0)" />
 
-                    <!-- Bara stjärna, färg styrs av om den är favorit -->
                     <button type="button"
                             class="mg-fav-button @(IsFavorite(asset) ? "mg-fav-active" : "")"
                             @onclick="@(() => ToggleFavoriteAsync(asset))">
@@ -112,19 +120,19 @@ else
 }
 
 @code {
-    private const string DemoUserId = "demo-user-1";
-
     private MarketOverviewResponse? _overview;
     private string? _error;
 
-    // Håller koll på vilka assets som är favoriter i UI
-    // (key: "Category:Symbol" så BTC i Crypto och BTC i Stocks blir olika)
+    // håller koll på favoriter för inloggad user i UI
     private readonly HashSet<string> _favoriteKeys = new();
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            // ladda auth-state först så vi vet om någon är inloggad
+            await AuthState.InitializeAsync();
+
 #if DEBUG
             // Lokalt - Function körs på din dator
             var baseUrl = "http://localhost:7247";
@@ -136,6 +144,12 @@ else
             var overviewUrl = $"{baseUrl}/api/market/overview";
 
             _overview = await Http.GetFromJsonAsync<MarketOverviewResponse>(overviewUrl);
+
+            // ladda favoriter från Cosmos om user är inloggad
+            if (AuthState.IsLoggedIn && !string.IsNullOrWhiteSpace(AuthState.UserId))
+            {
+                await LoadFavoritesAsync(baseUrl);
+            }
         }
         catch (Exception ex)
         {
@@ -143,35 +157,50 @@ else
         }
     }
 
-    // Nyckel per asset för favorite-listan
     private static string GetAssetKey(MarketInstrument asset)
         => $"{asset.Category}:{asset.Symbol}";
 
     private bool IsFavorite(MarketInstrument asset)
         => _favoriteKeys.Contains(GetAssetKey(asset));
 
+    private async Task LoadFavoritesAsync(string baseUrl)
+    {
+        if (string.IsNullOrWhiteSpace(AuthState.UserId))
+            return;
+
+        try
+        {
+            var url = $"{baseUrl}/api/favorites/{AuthState.UserId}";
+
+            // backend returnerar FavoriteAssetEntity, men det matchar FavoriteAssetRequest fint
+            var favorites = await Http.GetFromJsonAsync<List<FavoriteAssetRequest>>(url)
+                           ?? new List<FavoriteAssetRequest>();
+
+            _favoriteKeys.Clear();
+
+            foreach (var fav in favorites)
+            {
+                // AssetType i backend = Category i frontend
+                var key = $"{fav.AssetType}:{fav.Symbol}";
+                _favoriteKeys.Add(key);
+            }
+        }
+        catch
+        {
+            // om det skiter sig här låter vi bara UI gå vidare
+        }
+    }
+
     private async Task ToggleFavoriteAsync(MarketInstrument asset)
     {
-        var key = GetAssetKey(asset);
-
-        // Om den redan är favorit: ta bara bort visuellt (Cosmos har redan raden, Upsert gör inget farligt)
-        if (_favoriteKeys.Contains(key))
+        // kräver inloggad user
+        if (!AuthState.IsLoggedIn || string.IsNullOrWhiteSpace(AuthState.UserId))
         {
-            _favoriteKeys.Remove(key);
+            _error = "Log in to save favourites.";
             return;
         }
 
-        // Markera som favorit i UI direkt
-        _favoriteKeys.Add(key);
-
-        var request = new FavoriteAssetRequest
-        {
-            UserId = DemoUserId,
-            AssetId = asset.Symbol,      // id i din FavoriteAssetEntity blir UserId_AssetId
-            AssetType = asset.Category,
-            Symbol = asset.Symbol,
-            LastPrice = asset.PriceUsd
-        };
+        var key = GetAssetKey(asset);
 
 #if DEBUG
         var baseUrl = "http://localhost:7247";
@@ -179,19 +208,46 @@ else
         var baseUrl = "https://marketgrowth-api-astenhoff-ajhuarfah0akf5gp.swedencentral-01.azurewebsites.net";
 #endif
 
+        // Om redan favorit → DELETE i backend + ta bort i UI
+        if (_favoriteKeys.Contains(key))
+        {
+            var deleteUrl = $"{baseUrl}/api/favorites/{AuthState.UserId}/{asset.Symbol}";
+
+            try
+            {
+                await Http.DeleteAsync(deleteUrl);
+                _favoriteKeys.Remove(key);
+            }
+            catch (Exception ex)
+            {
+                _error = $"Kunde inte ta bort favorit: {ex.Message}";
+            }
+
+            return;
+        }
+
+        // Annars: lägg till favorit
+        _favoriteKeys.Add(key);
+
+        var request = new FavoriteAssetRequest
+        {
+            UserId = AuthState.UserId!,
+            AssetId = asset.Symbol,
+            AssetType = asset.Category,
+            Symbol = asset.Symbol,
+            LastPrice = asset.PriceUsd
+        };
+
         var url = $"{baseUrl}/api/favorites";
 
         try
         {
-            // Vi använder fortfarande din AddFavorite-function (Cosmos upsert)
             await Http.PostAsJsonAsync(url, request);
         }
         catch (Exception ex)
         {
-            // Om det skiter sig i backend vill vi inte krascha sidan
             _error = $"Kunde inte spara favorit: {ex.Message}";
-            // rulla tillbaka UI-state
-            _favoriteKeys.Remove(key);
+            _favoriteKeys.Remove(key); // rulla tillbaka UI-state
         }
     }
 }
