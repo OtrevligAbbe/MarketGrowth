@@ -1,158 +1,114 @@
-# MarketGrowth - Cloud-Native Market Analytics Platform
+# MarketGrowth
 
-MarketGrowth is a serverless, cloud-native market analytics platform
-built on Microsoft Azure. It aggregates real-time market data (stocks,
-crypto, and other assets) from multiple external APIs and exposes the
-data through a secure, scalable API and a modern web frontend.
+MarketGrowth is a modern serverless cloud application built on Microsoft Azure that aggregates real-time market data such as stocks and cryptocurrencies using external APIs. The project demonstrates how to build a secure, scalable, and cost-effective cloud-native solution using multiple Azure services.
 
-The project demonstrates modern cloud architecture, secure secret
-management, CI/CD automation, and production-grade monitoring.
+The system consists of a Blazor frontend, a serverless API backend using Azure Functions, and a cloud database powered by Azure Cosmos DB. Continuous deployment is handled through GitHub Actions, and all sensitive secrets are securely stored in Azure Key Vault.
 
-------------------------------------------------------------------------
+---
 
-## High-Level Architecture
+## Architecture Overview
 
-Frontend (Blazor WebAssembly) → Azure Function API (MarketGrowth.Api) →
-Azure Cosmos DB (Favorites, Users) → External APIs (AlphaVantage,
-CoinGecko)
+MarketGrowth is built with a fully serverless and event-driven architecture:
 
-Supporting Services: - Azure Key Vault (Secure Secrets) - Azure
-Application Insights (Monitoring & Logging) - GitHub Actions (CI/CD) -
-Azure Alerts & Dashboards (Operations & Observability)
+- Frontend: Blazor WebAssembly hosted in Azure Static Web Apps
+- Backend API: Azure Functions (.NET 8 Isolated)
+- Database: Azure Cosmos DB (NoSQL)
+- Authentication: Azure AD B2C
+- CI/CD: GitHub Actions
+- Secrets Management: Azure Key Vault
+- Monitoring & Logging: Application Insights
+- Alerts & Dashboards: Azure Monitor, Alerts & Workbooks
 
-------------------------------------------------------------------------
+---
 
-## Azure Services Used
+## Core Features
 
-  Service                        Purpose
-  ------------------------------ --------------------------------------
-  Azure Functions                Serverless backend API
-  Azure Cosmos DB                NoSQL database for favorites & users
-  Azure Key Vault                Secure storage of API keys & secrets
-  Azure Application Insights     Monitoring, logging & performance
-  Azure Monitor Alerts           Automatic error detection
-  Azure Dashboards & Workbooks   Operational monitoring
-  GitHub Actions                 CI/CD pipeline
-  Azure Static Web Apps          Frontend hosting
-  Microsoft Entra ID             Authentication
+- Real-time market data from external APIs (AlphaVantage, CoinGecko)
+- Secure user authentication using Azure AD B2C
+- Personal favorite tracking stored in Cosmos DB
+- Fully automated CI/CD pipeline
+- Production-grade monitoring with metrics, logs, alerts and dashboards
+- Secure secret handling using Azure Key Vault references
+- Scalable serverless backend with minimal cost footprint
 
-------------------------------------------------------------------------
+---
 
-## Security Design
+## Technologies Used
 
--   All secrets stored in Azure Key Vault
--   Managed Identity used for secure access
--   No API keys stored in code or GitHub
--   Environment variables resolved via Key Vault references
--   Authentication via Azure AD
+- C#
+- .NET 8
+- Azure Functions
+- Azure Cosmos DB
+- Azure Static Web Apps
+- Azure AD B2C
+- Azure Key Vault
+- Azure Application Insights
+- Azure Monitor
+- GitHub Actions
+- Blazor WebAssembly
 
-------------------------------------------------------------------------
+---
 
 ## CI/CD Pipeline
 
-The project uses GitHub Actions for fully automated deployment:
+The project is automatically built and deployed using GitHub Actions:
 
--   Trigger on every push to main
--   Builds the .NET API
--   Deploys directly to Azure Function App
--   Uses Azure federated credentials (OIDC)
--   No secrets stored in GitHub
+- Push to main triggers build
+- .NET project is compiled
+- Azure login is performed using federated identity
+- Azure Functions app is deployed automatically
 
-Pipeline location: .github/workflows/main_marketgrowth-api-astenhoff.yml
+This ensures zero-downtime deployments with full traceability.
 
-------------------------------------------------------------------------
+---
+
+## Security
+
+- All API keys and connection strings are stored in Azure Key Vault
+- No secrets are stored in code or GitHub
+- Azure Managed Identity is used for secure access to Key Vault
+- Authentication is handled by Azure AD B2C
+
+---
 
 ## Monitoring & Observability
 
-Implemented Monitoring Features: - Application Insights logging - Live
-Metrics - Failure tracking - Request duration analysis - Custom Azure
-Alerts - Azure Workbook dashboards - Grafana preview dashboards
+MarketGrowth is fully monitored using Azure-native tooling:
 
-------------------------------------------------------------------------
+- Application Insights tracks requests, failures, latency, dependencies and exceptions
+- Azure Alerts notify on failed requests and performance degradation
+- Azure Workbooks visualize system health and traffic trends
+
+---
 
 ## Project Structure
 
+```
 MarketGrowth/
+│
+├── api/MarketGrowth.Api       -> Azure Functions backend
+├── frontend                  -> Blazor WebAssembly frontend
+├── .github/workflows         -> GitHub CI/CD pipelines
+├── README.md
+└── MarketGrowth_Dokumentation.md
+```
 
--   api/MarketGrowth.Api - Azure Function backend
--   frontend - Blazor WebAssembly frontend
--   .github/workflows - CI/CD pipeline
--   MarketGrowth_Dokumentation.md
--   README.md
+---
 
-------------------------------------------------------------------------
+## Purpose of the Project
 
-## Environment Configuration
+This project was developed as part of a cloud and system development examination to demonstrate:
 
-Local Development (local.settings.json): - ALPHAVANTAGE_API_KEY -
-COINGECKO_API_KEY - CosmosConnection - CosmosDbDatabase -
-CosmosDbContainer
+- Serverless architecture
+- Secure cloud authentication
+- API integration
+- Cloud database usage
+- CI/CD automation
+- Monitoring and alerting
+- Production-grade cloud design principles
 
-Production (Azure): All secrets are resolved using:
-@Microsoft.KeyVault(SecretUri=...)
-
-------------------------------------------------------------------------
-
-## External APIs
-
-  API            Purpose
-  -------------- ----------------------------
-  AlphaVantage   Stock market data
-  CoinGecko      Cryptocurrency market data
-
-------------------------------------------------------------------------
-
-## Implemented Features
-
--   Market data aggregation
--   User authentication
--   Favorites system
--   Secure API key handling
--   Cloud-native backend
--   Auto-deploy CI/CD pipeline
--   Monitoring & alerts
--   Operational dashboards
--   Fault tracking & live logs
-
-------------------------------------------------------------------------
-
-## Project Goals
-
--   Demonstrate real-world cloud architecture
--   Apply secure DevOps practices
--   Build a production-ready serverless system
--   Use modern observability and monitoring
--   Learn Azure in depth (Functions, Vault, Monitor, CI/CD, Identity)
-
-------------------------------------------------------------------------
-
-## Testing Strategy
-
--   API tested via browser requests
--   Azure live logs
--   Application Insights queries
--   CI/CD pipeline automatically validates build on every push
-
-------------------------------------------------------------------------
-
-## Scalability & Performance
-
--   Serverless architecture scales automatically
--   Cosmos DB is fully managed and globally scalable
--   Frontend hosted on Azure Static Web Apps
-
-------------------------------------------------------------------------
-
-## Documentation
-
-Additional documentation: - MarketGrowth_Dokumentation.md - Technical
-design & architecture - README.md - Project overview - Azure dashboards
-& logs for live system behavior
-
-------------------------------------------------------------------------
+---
 
 ## Author
 
-Developed by Albin Stenhoff\
-Cloud & Backend Development Student\
-Focus: Azure, .NET, Serverless, DevOps
+Developed by OtrevligAbbe
