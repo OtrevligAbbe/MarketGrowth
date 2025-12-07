@@ -30,15 +30,11 @@ namespace MarketGrowth.Api.Repositories
         {
             var results = new List<MarketAlertEntity>();
 
+            
             var query = new QueryDefinition(
                 "SELECT * FROM c ORDER BY c.CreatedUtc DESC");
 
-            using var iterator = _container.GetItemQueryIterator<MarketAlertEntity>(
-                query,
-                requestOptions: new QueryRequestOptions
-                {
-                    MaxItemCount = maxCount
-                });
+            using var iterator = _container.GetItemQueryIterator<MarketAlertEntity>(query);
 
             while (iterator.HasMoreResults && results.Count < maxCount)
             {

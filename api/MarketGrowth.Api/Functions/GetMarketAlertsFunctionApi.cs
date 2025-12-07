@@ -22,7 +22,6 @@ namespace MarketGrowth.Api.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "alerts")]
             HttpRequestData req)
         {
-            // hämta t ex senaste 50 alerts
             var alerts = await _alertRepo.GetLatestAsync(50);
 
             var result = alerts
