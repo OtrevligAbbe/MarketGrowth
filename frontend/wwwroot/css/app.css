@@ -736,3 +736,28 @@ code {
         background: #10b981;
         color: #020617;
     }
+
+.mg-fav-button {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    margin-top: 0.5rem;
+}
+
+.mg-fav-star {
+    font-size: 20px;
+    color: rgba(255, 255, 255, 0.12); 
+    text-shadow: 0 0 0 #555;
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.mg-fav-button:hover .mg-fav-star {
+    color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.1);
+}
+
+.mg-fav-active .mg-fav-star {
+    color: #facc15;
+    text-shadow: none;
+}

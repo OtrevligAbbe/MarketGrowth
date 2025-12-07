@@ -88,10 +88,11 @@
                         <Sparkline Data="@_selectedAsset.Sparkline7d"
                                    IsPositive="@(_selectedAsset.Change24h >= 0)" />
 
-                        <button class="mg-fav-button"
+                        <button type="button"
+                                class="mg-fav-button @(IsFavorite(_selectedAsset) ? "mg-fav-active" : "")"
                                 style="margin-top:0.75rem;"
                                 @onclick="@(() => ToggleFavoriteAsync(_selectedAsset))">
-                            ☆ Save this asset as favourite
+                            <span class="mg-fav-star">★</span>
                         </button>
                     </div>
 
@@ -145,9 +146,10 @@
                         <Sparkline Data="@asset.Sparkline7d"
                                    IsPositive="@(asset.Change24h >= 0)" />
 
-                        <button class="mg-fav-button"
+                        <button type="button"
+                                class="mg-fav-button @(IsFavorite(asset) ? "mg-fav-active" : "")"
                                 @onclick="@(() => ToggleFavoriteAsync(asset))">
-                            ☆ Save as favourite
+                            <span class="mg-fav-star">★</span>
                         </button>
                     </div>
                 }
@@ -166,9 +168,10 @@
                         <Sparkline Data="@asset.Sparkline7d"
                                    IsPositive="@(asset.Change24h >= 0)" />
 
-                        <button class="mg-fav-button"
+                        <button type="button"
+                                class="mg-fav-button @(IsFavorite(asset) ? "mg-fav-active" : "")"
                                 @onclick="@(() => ToggleFavoriteAsync(asset))">
-                            ☆ Save as favourite
+                            <span class="mg-fav-star">★</span>
                         </button>
                     </div>
                 }
@@ -187,6 +190,9 @@
     private MarketInstrument? _selectedAsset;
     private int _selectedIndex;
     private string? _error;
+
+    // Håller koll på favoriter i UI (samma princip som på /marketdata)
+    private readonly HashSet<string> _favoriteKeys = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -231,8 +237,26 @@
         _selectedAsset = _allPreview[index];
     }
 
+    private static string GetAssetKey(MarketInstrument asset)
+        => $"{asset.Category}:{asset.Symbol}";
+
+    private bool IsFavorite(MarketInstrument asset)
+        => _favoriteKeys.Contains(GetAssetKey(asset));
+
     private async Task ToggleFavoriteAsync(MarketInstrument asset)
     {
+        var key = GetAssetKey(asset);
+
+        // Om redan favorit → toggla bara bort i UI (Cosmos-raden får ligga kvar)
+        if (_favoriteKeys.Contains(key))
+        {
+            _favoriteKeys.Remove(key);
+            return;
+        }
+
+        // Markera som favorit i UI
+        _favoriteKeys.Add(key);
+
         var request = new FavoriteAssetRequest
         {
             UserId = DemoUserId,
@@ -250,6 +274,14 @@
 
         var url = $"{baseUrl}/api/favorites";
 
-        await Http.PostAsJsonAsync(url, request);
+        try
+        {
+            await Http.PostAsJsonAsync(url, request);
+        }
+        catch (Exception ex)
+        {
+            _error = $"Kunde inte spara favorit: {ex.Message}";
+            _favoriteKeys.Remove(key); // rulla tillbaka UI-state om det blev fel
+        }
     }
 }

@@ -39,9 +39,11 @@ else
                     <Sparkline Data="@asset.Sparkline7d"
                                IsPositive="@(asset.Change24h >= 0)" />
 
-                    <button class="mg-fav-button"
+                    <!-- Bara stjärna, färg styrs av om den är favorit -->
+                    <button type="button"
+                            class="mg-fav-button @(IsFavorite(asset) ? "mg-fav-active" : "")"
                             @onclick="@(() => ToggleFavoriteAsync(asset))">
-                        ☆ Save as favourite
+                        <span class="mg-fav-star">★</span>
                     </button>
                 </div>
             }
@@ -68,9 +70,10 @@ else
                     <Sparkline Data="@asset.Sparkline7d"
                                IsPositive="@(asset.Change24h >= 0)" />
 
-                    <button class="mg-fav-button"
+                    <button type="button"
+                            class="mg-fav-button @(IsFavorite(asset) ? "mg-fav-active" : "")"
                             @onclick="@(() => ToggleFavoriteAsync(asset))">
-                        ☆ Save as favourite
+                        <span class="mg-fav-star">★</span>
                     </button>
                 </div>
             }
@@ -97,9 +100,10 @@ else
                     <Sparkline Data="@asset.Sparkline7d"
                                IsPositive="@(asset.Change24h >= 0)" />
 
-                    <button class="mg-fav-button"
+                    <button type="button"
+                            class="mg-fav-button @(IsFavorite(asset) ? "mg-fav-active" : "")"
                             @onclick="@(() => ToggleFavoriteAsync(asset))">
-                        ☆ Save as favourite
+                        <span class="mg-fav-star">★</span>
                     </button>
                 </div>
             }
@@ -112,6 +116,10 @@ else
 
     private MarketOverviewResponse? _overview;
     private string? _error;
+
+    // Håller koll på vilka assets som är favoriter i UI
+    // (key: "Category:Symbol" så BTC i Crypto och BTC i Stocks blir olika)
+    private readonly HashSet<string> _favoriteKeys = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -135,12 +143,31 @@ else
         }
     }
 
+    // Nyckel per asset för favorite-listan
+    private static string GetAssetKey(MarketInstrument asset)
+        => $"{asset.Category}:{asset.Symbol}";
+
+    private bool IsFavorite(MarketInstrument asset)
+        => _favoriteKeys.Contains(GetAssetKey(asset));
+
     private async Task ToggleFavoriteAsync(MarketInstrument asset)
     {
+        var key = GetAssetKey(asset);
+
+        // Om den redan är favorit: ta bara bort visuellt (Cosmos har redan raden, Upsert gör inget farligt)
+        if (_favoriteKeys.Contains(key))
+        {
+            _favoriteKeys.Remove(key);
+            return;
+        }
+
+        // Markera som favorit i UI direkt
+        _favoriteKeys.Add(key);
+
         var request = new FavoriteAssetRequest
         {
             UserId = DemoUserId,
-            AssetId = asset.Symbol,
+            AssetId = asset.Symbol,      // id i din FavoriteAssetEntity blir UserId_AssetId
             AssetType = asset.Category,
             Symbol = asset.Symbol,
             LastPrice = asset.PriceUsd
@@ -154,6 +181,17 @@ else
 
         var url = $"{baseUrl}/api/favorites";
 
-        await Http.PostAsJsonAsync(url, request);
+        try
+        {
+            // Vi använder fortfarande din AddFavorite-function (Cosmos upsert)
+            await Http.PostAsJsonAsync(url, request);
+        }
+        catch (Exception ex)
+        {
+            // Om det skiter sig i backend vill vi inte krascha sidan
+            _error = $"Kunde inte spara favorit: {ex.Message}";
+            // rulla tillbaka UI-state
+            _favoriteKeys.Remove(key);
+        }
     }
 }
