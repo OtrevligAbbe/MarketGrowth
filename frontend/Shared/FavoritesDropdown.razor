@@ -1,114 +1,91 @@
-﻿@using System.Net.Http.Json
+﻿@using System.Globalization
 @using MarketGrowth.Frontend.Shared
-@inject HttpClient Http
 @inject AuthState Auth
+@inject HttpClient Http
+@implements IDisposable
 
-@if (!Auth.IsLoggedIn)
-{
-    @* Visa inget om man inte är inloggad *@
-}
-else
-{
-    <div class="mg-fav-dropdown" @onclick:stopPropagation="true">
-        <button class="mg-fav-dropdown-button" @onclick="ToggleOpen">
-            ⭐ @Favorites.Count
-        </button>
+<div class="mg-fav-wrapper" @onclick:stopPropagation="true">
+    <button type="button"
+            class="mg-fav-pill"
+            @onclick="ToggleOpen">
+        <span class="mg-fav-pill-icon">★</span>
+        <span class="mg-fav-pill-count">@Auth.FavoritesCount</span>
+    </button>
 
-        @if (IsOpen)
-        {
-            <div class="mg-fav-dropdown-menu">
-                @if (IsLoading)
+    @if (IsOpen)
+    {
+        <div class="mg-fav-dropdown">
+            @if (!Auth.IsLoggedIn)
+            {
+                <div class="mg-fav-empty">
+                    Log in to save favourites.
+                </div>
+            }
+            else if (Auth.FavoritesCount == 0)
+            {
+                <div class="mg-fav-empty">
+                    You have no favourites yet.
+                </div>
+            }
+            else
+            {
+                @foreach (var fav in Auth.Favorites)
                 {
-                    <div class="mg-fav-dropdown-item">
-                        Loading favourites...
-                    </div>
-                }
-                else if (Favorites.Count == 0)
-                {
-                    <div class="mg-fav-dropdown-item">
-                        You have no favourites yet.
-                    </div>
-                }
-                else
-                {
-                    @foreach (var fav in Favorites)
-                    {
-                        <div class="mg-fav-dropdown-item">
-                            <span>@fav.Symbol (@fav.AssetType)</span>
+                    <div class="mg-fav-item">
+                        <div class="mg-fav-item-main">
+                            <span class="mg-fav-symbol">@fav.Symbol</span>
+                            <span class="mg-fav-type">@fav.AssetType</span>
+                        </div>
+
+                        <div class="mg-fav-item-right">
+                            <span class="mg-fav-price">
+                                @fav.LastPrice.ToString(
+                                    "C2",
+                                    CultureInfo.GetCultureInfo("en-US"))
+                            </span>
 
                             <button type="button"
-                                    class="mg-fav-dropdown-remove"
+                                    class="mg-fav-remove-btn"
                                     @onclick="() => RemoveFavoriteAsync(fav)">
                                 Remove
                             </button>
                         </div>
-                    }
+                    </div>
                 }
-            </div>
-        }
-    </div>
-}
+            }
+        </div>
+    }
+</div>
 
 @code {
     private bool IsOpen;
-    private bool IsLoading;
-    private List<FavoriteAssetRequest> Favorites = new();
 
-    // vi använder inget OnChange-event – allt laddas när man öppnar dropdownen
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        return Task.CompletedTask;
+        // Lyssna på ändringar i AuthState (login / logout / reload)
+        Auth.OnChange += HandleAuthChanged;
+
+        // Om man redan är inloggad när appen startar → hämta favoriter
+        if (Auth.IsLoggedIn && !string.IsNullOrWhiteSpace(Auth.UserId))
+        {
+            await Auth.ReloadFavoritesAsync();
+        }
     }
 
-    private async Task ToggleOpen()
+    private void ToggleOpen()
     {
         IsOpen = !IsOpen;
-
-        if (IsOpen && Auth.IsLoggedIn)
-        {
-            await LoadAsync();
-        }
     }
 
-    private async Task LoadAsync()
+    private void HandleAuthChanged()
     {
-        if (string.IsNullOrWhiteSpace(Auth.UserId))
-        {
-            Favorites.Clear();
-            return;
-        }
-
-        IsLoading = true;
-        StateHasChanged();
-
-#if DEBUG
-        var baseUrl = "http://localhost:7247";
-#else
-        var baseUrl = "https://marketgrowth-api-astenhoff-ajhuarfah0akf5gp.swedencentral-01.azurewebsites.net";
-#endif
-
-        var url = $"{baseUrl}/api/favorites/{Auth.UserId}";
-
-        try
-        {
-            Favorites = await Http.GetFromJsonAsync<List<FavoriteAssetRequest>>(url)
-                        ?? new List<FavoriteAssetRequest>();
-        }
-        catch
-        {
-            // om API:t dör → visa bara tom lista
-            Favorites.Clear();
-        }
-        finally
-        {
-            IsLoading = false;
-            StateHasChanged();
-        }
+        // Gör omrendering på UI-tråden
+        InvokeAsync(StateHasChanged);
     }
 
     private async Task RemoveFavoriteAsync(FavoriteAssetRequest fav)
     {
-        if (string.IsNullOrWhiteSpace(Auth.UserId))
+        if (!Auth.IsLoggedIn || string.IsNullOrWhiteSpace(Auth.UserId))
             return;
 
 #if DEBUG
@@ -117,18 +94,23 @@ else
         var baseUrl = "https://marketgrowth-api-astenhoff-ajhuarfah0akf5gp.swedencentral-01.azurewebsites.net";
 #endif
 
-        var deleteUrl = $"{baseUrl}/api/favorites/{Auth.UserId}/{fav.Symbol}";
+        var url = $"{baseUrl}/api/favorites/{Auth.UserId}/{fav.Symbol}";
 
         try
         {
-            await Http.DeleteAsync(deleteUrl);
-            Favorites.Remove(fav);
+            await Http.DeleteAsync(url);
+
+            // Hämta om från backend så Auth.Favorites & FavoritesCount uppdateras
+            await Auth.ReloadFavoritesAsync();
         }
         catch
         {
-            // ignore fel
+            // här kan du logga fel om du vill, men UI ska inte krascha
         }
+    }
 
-        StateHasChanged();
+    public void Dispose()
+    {
+        Auth.OnChange -= HandleAuthChanged;
     }
 }
