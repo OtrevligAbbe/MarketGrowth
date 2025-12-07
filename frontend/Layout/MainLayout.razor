@@ -7,22 +7,25 @@
 <PageTitle>MarketGrowth</PageTitle>
 
 <div class="mg-app">
+
+    <!-- NAVBAR -->
     <header class="mg-navbar">
-        <!-- Vänster: logo -->
+
+        <!-- Vänster: Logo -->
         <a href="/" class="mg-navbar-left mg-logo-link">
             <span class="mg-logo-mark">$</span>
             <span class="mg-logo-text">MarketGrowth</span>
         </a>
 
-       <nav class="mg-navbar-center">
-    <a href="/marketdata" class="mg-nav-link">Trading</a>
-    <a href="/marketdata" class="mg-nav-link">Markets</a>
-    <a href="/alerts" class="mg-nav-link">Alerts</a>   <!-- 👈 HÄR -->
-    <a href="/" class="mg-nav-link">Learn</a>
-    <a href="/" class="mg-nav-link">About</a>
-       </nav>
+        <!-- Mitten: Meny -->
+        <nav class="mg-navbar-center">
+            <a href="/marketdata" class="mg-nav-link">Trading</a>
+            <a href="/marketdata" class="mg-nav-link">Markets</a>
+            <a href="/learn" class="mg-nav-link">Learn</a>
+            <a href="/about" class="mg-nav-link">About</a>
+        </nav>
 
-        <!-- Höger: login / logout -->
+        <!-- Höger: Login / Logout -->
         <div class="mg-navbar-right">
             @if (Auth.IsLoggedIn)
             {
@@ -38,11 +41,14 @@
                 </a>
             }
         </div>
+
     </header>
 
+    <!-- SIDINNEHÅLL -->
     <main class="mg-main">
         @Body
     </main>
+
 </div>
 
 @code {
