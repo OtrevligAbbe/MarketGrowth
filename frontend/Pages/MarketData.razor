@@ -5,7 +5,7 @@
 @using frontend.Shared
 @using MarketGrowth.Frontend.Shared
 @inject HttpClient Http
-@inject AuthState AuthState
+@inject AuthState Auth
 
 <h1>MarketGrowth</h1>
 <p class="mg-subtitle">
@@ -13,7 +13,7 @@
     @if (_favoriteKeys.Count > 0)
     {
         <span style="margin-left:1rem; font-size:0.9rem; opacity:0.8;">
-            • @(_favoriteKeys.Count) favourites saved
+            • @_favoriteKeys.Count favourites saved
         </span>
     }
 </p>
@@ -120,19 +120,22 @@ else
 }
 
 @code {
+    // aktivt konto: inloggad användare, annars demo-user-1
+    private string CurrentUserId =>
+        Auth.IsLoggedIn && !string.IsNullOrWhiteSpace(Auth.UserId)
+            ? Auth.UserId
+            : "demo-user-1";
+
     private MarketOverviewResponse? _overview;
     private string? _error;
 
-    // håller koll på favoriter för inloggad user i UI
+    // håller koll på favoriter för denna user i UI
     private readonly HashSet<string> _favoriteKeys = new();
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            // ladda auth-state först så vi vet om någon är inloggad
-            await AuthState.InitializeAsync();
-
 #if DEBUG
             // Lokalt - Function körs på din dator
             var baseUrl = "http://localhost:7247";
@@ -145,11 +148,8 @@ else
 
             _overview = await Http.GetFromJsonAsync<MarketOverviewResponse>(overviewUrl);
 
-            // ladda favoriter från Cosmos om user är inloggad
-            if (AuthState.IsLoggedIn && !string.IsNullOrWhiteSpace(AuthState.UserId))
-            {
-                await LoadFavoritesAsync(baseUrl);
-            }
+            // ladda favoriter från Cosmos för current user
+            await LoadFavoritesAsync(baseUrl);
         }
         catch (Exception ex)
         {
@@ -165,12 +165,9 @@ else
 
     private async Task LoadFavoritesAsync(string baseUrl)
     {
-        if (string.IsNullOrWhiteSpace(AuthState.UserId))
-            return;
-
         try
         {
-            var url = $"{baseUrl}/api/favorites/{AuthState.UserId}";
+            var url = $"{baseUrl}/api/favorites/{CurrentUserId}";
 
             // backend returnerar FavoriteAssetEntity, men det matchar FavoriteAssetRequest fint
             var favorites = await Http.GetFromJsonAsync<List<FavoriteAssetRequest>>(url)
@@ -193,13 +190,6 @@ else
 
     private async Task ToggleFavoriteAsync(MarketInstrument asset)
     {
-        // kräver inloggad user
-        if (!AuthState.IsLoggedIn || string.IsNullOrWhiteSpace(AuthState.UserId))
-        {
-            _error = "Log in to save favourites.";
-            return;
-        }
-
         var key = GetAssetKey(asset);
 
 #if DEBUG
@@ -211,7 +201,7 @@ else
         // Om redan favorit → DELETE i backend + ta bort i UI
         if (_favoriteKeys.Contains(key))
         {
-            var deleteUrl = $"{baseUrl}/api/favorites/{AuthState.UserId}/{asset.Symbol}";
+            var deleteUrl = $"{baseUrl}/api/favorites/{CurrentUserId}/{asset.Symbol}";
 
             try
             {
@@ -231,7 +221,7 @@ else
 
         var request = new FavoriteAssetRequest
         {
-            UserId = AuthState.UserId!,
+            UserId = CurrentUserId,
             AssetId = asset.Symbol,
             AssetType = asset.Category,
             Symbol = asset.Symbol,

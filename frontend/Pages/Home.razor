@@ -6,6 +6,7 @@
 @using frontend.Shared
 @using MarketGrowth.Frontend.Shared
 @inject HttpClient Http
+@inject AuthState Auth
 
 <div class="mg-home">
 
@@ -186,8 +187,11 @@
 
 @code
 {
-    // just nu: en demo-user-id (sen kan vi koppla till riktiga AuthState.UserId)
-    private const string DemoUserId = "demo-user-1";
+    // aktivt konto: inloggad användare, annars demo-user-1
+    private string CurrentUserId =>
+        Auth.IsLoggedIn && !string.IsNullOrWhiteSpace(Auth.UserId)
+            ? Auth.UserId
+            : "demo-user-1";
 
     private MarketOverviewResponse? _overview;
     private List<MarketInstrument> _cryptoPreview = new();
@@ -197,6 +201,7 @@
     private int _selectedIndex;
     private string? _error;
 
+    // UI-state för favoriter för denna user
     private readonly HashSet<string> _favoriteKeys = new();
 
     protected override async Task OnInitializedAsync()
@@ -214,12 +219,14 @@
 
             if (_overview is not null)
             {
+                // 5 krypton + 5 aktier för preview
                 _cryptoPreview = _overview.Crypto.Take(5).ToList();
                 _stockPreview  = _overview.Stocks.Take(5).ToList();
                 _allPreview    = _cryptoPreview.Concat(_stockPreview).ToList();
 
                 if (_allPreview.Count > 0)
                 {
+                    // Välj en random tillgång i hero-kortet
                     var rng = new Random();
                     _selectedIndex = rng.Next(0, _allPreview.Count);
                     _selectedAsset = _allPreview[_selectedIndex];
@@ -252,7 +259,7 @@
     {
         try
         {
-            var url = $"{baseUrl}/api/favorites/{DemoUserId}";
+            var url = $"{baseUrl}/api/favorites/{CurrentUserId}";
 
             var favorites = await Http.GetFromJsonAsync<List<FavoriteAssetRequest>>(url)
                            ?? new List<FavoriteAssetRequest>();
@@ -267,7 +274,7 @@
         }
         catch
         {
-            // ignorerar fel här, UI får funka ändå
+            // skit i fel här, appen funkar ändå
         }
     }
 
@@ -283,7 +290,8 @@
 
         if (_favoriteKeys.Contains(key))
         {
-            var deleteUrl = $"{baseUrl}/api/favorites/{DemoUserId}/{asset.Symbol}";
+            // ta bort
+            var deleteUrl = $"{baseUrl}/api/favorites/{CurrentUserId}/{asset.Symbol}";
 
             try
             {
@@ -298,11 +306,12 @@
             return;
         }
 
+        // lägg till
         _favoriteKeys.Add(key);
 
         var request = new FavoriteAssetRequest
         {
-            UserId = DemoUserId,
+            UserId = CurrentUserId,
             AssetId = asset.Symbol,
             AssetType = asset.Category,
             Symbol = asset.Symbol,
@@ -322,3 +331,4 @@
         }
     }
 }
+
