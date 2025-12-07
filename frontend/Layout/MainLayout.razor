@@ -22,13 +22,10 @@
             <a href="/" class="mg-nav-link">About</a>
         </nav>
 
-        <!-- Höger: login / logout + favourites -->
+        <!-- Höger: login / logout -->
         <div class="mg-navbar-right">
             @if (Auth.IsLoggedIn)
             {
-                <!-- Dropdown med användarens favoriter -->
-                <FavoritesDropdown />
-
                 <button class="mg-btn mg-btn-outline mg-nav-login"
                         @onclick="Logout">
                     Log out @Auth.UserId
