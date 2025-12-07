@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MarketGrowth.Api
+namespace MarketGrowth.Api.Models
 {
     public class MarketInstrument
     {

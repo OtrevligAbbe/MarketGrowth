@@ -6,11 +6,12 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using MarketGrowth.Api.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 
-namespace MarketGrowth.Api
+namespace MarketGrowth.Api.Functions
 {
     public class GetMarketOverviewFunction
     {

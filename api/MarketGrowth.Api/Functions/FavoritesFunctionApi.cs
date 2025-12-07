@@ -8,8 +8,10 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
+using MarketGrowth.Api.Entities;
+using MarketGrowth.Api.Models;
 
-namespace MarketGrowth.Api
+namespace MarketGrowth.Api.Functions
 {
     public class FavoritesFunctionApi
     {

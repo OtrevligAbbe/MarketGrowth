@@ -1,4 +1,4 @@
-﻿namespace MarketGrowth.Api
+﻿namespace MarketGrowth.Api.Models
 {
     // DTO som backend tar emot från frontenden när man sparar en favorit
     public class FavoriteAssetRequest

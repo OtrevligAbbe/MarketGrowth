@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-namespace MarketGrowth.Api
+namespace MarketGrowth.Api.Entities
 {
     public class FavoriteAssetEntity
     {

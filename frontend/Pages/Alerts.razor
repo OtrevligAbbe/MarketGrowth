@@ -1,0 +1,67 @@
+@page "/alerts"
+
+@using System.Net.Http.Json
+@using frontend.Shared
+@inject HttpClient Http
+
+<h3>Market alerts</h3>
+
+@if (_isLoading)
+{
+    <p>Laddar alerts...</p>
+}
+else if (_alerts == null || _alerts.Count == 0)
+{
+    <p>Inga alerts ännu.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Tid</th>
+                <th>Symbol</th>
+                <th>Typ</th>
+                <th>Riktning</th>
+                <th>Förändring</th>
+                <th>Gammalt pris</th>
+                <th>Nytt pris</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var alert in _alerts)
+            {
+                <tr>
+                    <td>@alert.CreatedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>@alert.Symbol</td>
+                    <td>@alert.AssetType</td>
+                    <td>@alert.Direction</td>
+                    <td>@alert.ChangePercent.ToString("0.##") %</td>
+                    <td>@alert.OldPrice.ToString("0.00")</td>
+                    <td>@alert.NewPrice.ToString("0.00")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<AlertFrontend>? _alerts;
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _alerts = await Http.GetFromJsonAsync<List<AlertFrontend>>("api/alerts");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

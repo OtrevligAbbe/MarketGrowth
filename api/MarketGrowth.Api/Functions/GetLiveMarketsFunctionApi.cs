@@ -5,7 +5,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 
-namespace MarketGrowth.Api
+namespace MarketGrowth.Api.Functions
 {
     public class GetLiveMarketsFunction
     {
