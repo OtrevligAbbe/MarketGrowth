@@ -761,3 +761,50 @@ code {
     color: #facc15;
     text-shadow: none;
 }
+
+.mg-fav-dropdown {
+    position: relative;
+    display: inline-block;
+    margin-right: 0.75rem;
+}
+
+.mg-fav-dropdown-button {
+    border: none;
+    border-radius: 999px;
+    padding: 0.35rem 0.8rem;
+    cursor: pointer;
+    background-color: #121822;
+    font-size: 0.85rem;
+}
+
+.mg-fav-dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: 120%;
+    min-width: 220px;
+    background-color: #0b111a;
+    border-radius: 0.75rem;
+    padding: 0.5rem;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.55);
+    z-index: 1000;
+}
+
+.mg-fav-dropdown-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.3rem 0.4rem;
+    font-size: 0.85rem;
+}
+
+    .mg-fav-dropdown-item + .mg-fav-dropdown-item {
+        border-top: 1px solid rgba(255,255,255,0.04);
+    }
+
+.mg-fav-dropdown-remove {
+    border: none;
+    background: transparent;
+    color: #ff6b6b;
+    cursor: pointer;
+    font-size: 0.8rem;
+}

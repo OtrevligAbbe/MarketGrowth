@@ -1,14 +1,20 @@
 ﻿@inherits LayoutComponentBase
+@using frontend.Shared
+
+@inject AuthState Auth
+@inject NavigationManager Nav
 
 <PageTitle>MarketGrowth</PageTitle>
 
 <div class="mg-app">
     <header class="mg-navbar">
+        <!-- Vänster: logo -->
         <a href="/" class="mg-navbar-left mg-logo-link">
             <span class="mg-logo-mark">$</span>
             <span class="mg-logo-text">MarketGrowth</span>
         </a>
 
+        <!-- Mitten: länkar -->
         <nav class="mg-navbar-center">
             <a href="/marketdata" class="mg-nav-link">Trading</a>
             <a href="/marketdata" class="mg-nav-link">Markets</a>
@@ -16,10 +22,24 @@
             <a href="/" class="mg-nav-link">About</a>
         </nav>
 
+        <!-- Höger: login / logout + favourites -->
         <div class="mg-navbar-right">
-            <a href="/authentication" class="mg-btn mg-btn-outline">
-                Log in
-            </a>
+            @if (Auth.IsLoggedIn)
+            {
+                <!-- Dropdown med användarens favoriter -->
+                <FavoritesDropdown />
+
+                <button class="mg-btn mg-btn-outline mg-nav-login"
+                        @onclick="Logout">
+                    Log out @Auth.UserId
+                </button>
+            }
+            else
+            {
+                <a href="/authentication" class="mg-btn mg-btn-outline mg-nav-login">
+                    Log in
+                </a>
+            }
         </div>
     </header>
 
@@ -27,3 +47,11 @@
         @Body
     </main>
 </div>
+
+@code {
+    private async Task Logout()
+    {
+        await Auth.LogoutAsync();
+        Nav.NavigateTo("/");
+    }
+}
