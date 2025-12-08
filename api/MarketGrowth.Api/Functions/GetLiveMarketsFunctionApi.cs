@@ -21,7 +21,7 @@ namespace MarketGrowth.Api.Functions
             _logger = logger;
         }
 
-        // URL blir: /api/market/crypto
+        // /api/market/crypto
         [Function("GetLiveMarkets")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "market/crypto")]
@@ -60,7 +60,7 @@ namespace MarketGrowth.Api.Functions
                     return response;
                 }
 
-                // 4. Mappa om till snyggare shape (BTC, ETH, …)
+                // 4. Mappa om till snyggare shape
                 var result = new Dictionary<string, CoinMarketDto>();
 
                 void Add(string id, string symbol)

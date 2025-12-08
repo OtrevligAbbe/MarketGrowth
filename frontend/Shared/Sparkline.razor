@@ -14,10 +14,9 @@
 </svg>
 
 @code {
-    // Data = lista med normaliserade värden (0–1) från API:t
     [Parameter] public IReadOnlyList<decimal>? Data { get; set; }
 
-    // Används för att välja färg (grön/röd)
+
     [Parameter] public bool IsPositive { get; set; }
 
     private string StrokeColor => IsPositive ? "#00FF88" : "#FF4D4D";
@@ -32,7 +31,6 @@
         var count = Data.Count;
         if (count == 1)
         {
-            // Om bara en punkt ? rita en rak linje i mitten
             return "0,12 80,12";
         }
 
@@ -45,13 +43,10 @@
 
         for (int i = 0; i < count; i++)
         {
-            // x = jämnt utspritt mellan 0 och 80
             var x = (double)i / (count - 1) * 80.0;
 
-            // normalisera värdet mellan 0 och 1
             var value = (double)((Data[i] - min) / range);
 
-            // y = inverterat (0 = nederst, 1 = högst)
             var y = 24.0 - value * 24.0;
 
             points.Add(

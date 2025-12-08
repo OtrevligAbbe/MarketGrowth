@@ -1,6 +1,5 @@
-/* ================================
-   GLOBAL
-================================ */
+/*GLOBAL*/
+
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     background-color: #f5f7fa;
@@ -19,9 +18,7 @@ a,
     padding-top: 1.1rem;
 }
 
-/* ================================
-   BUTTONS
-================================ */
+/* BUTTONS */
 .btn-primary {
     color: #fff;
     background-color: #1db954;
@@ -36,9 +33,7 @@ a,
     box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #1db954;
 }
 
-/* ================================
-   VALIDATION
-================================ */
+/* VALIDATION */
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
 }
@@ -51,9 +46,7 @@ a,
     color: red;
 }
 
-/* ================================
-   ERROR UI
-================================ */
+/* ERROR UI*/
 #blazor-error-ui {
     color-scheme: light only;
     background: lightyellow;
@@ -85,9 +78,7 @@ a,
         content: "An error has occurred.";
     }
 
-/* ================================
-   LOADING
-================================ */
+/* LOADING */
 .loading-progress {
     position: relative;
     display: block;
@@ -121,16 +112,12 @@ a,
         content: var(--blazor-load-percentage-text, "Loading");
     }
 
-/* ================================
-   CODE
-================================ */
+/*CODE*/
 code {
     color: #c02d76;
 }
 
-/* ================================
-   FORMS
-================================ */
+/* FORMS */
 .form-floating > .form-control-plaintext::placeholder,
 .form-floating > .form-control::placeholder {
     color: var(--bs-secondary-color);
@@ -142,14 +129,11 @@ code {
     text-align: start;
 }
 
-/* ================================
-   LAYOUT - APP + NAVBAR
-   (Capital-liknande topbar)
-================================ */
+/* LAYOUT - APP + NAVBAR */
 
 .mg-app {
     min-height: 100vh;
-    background: #0b1018; /* mörk bakgrund bakom innehållet */
+    background: #0b1018; 
     color: #e5e7eb;
 }
 
@@ -189,7 +173,7 @@ code {
 .mg-logo-text {
     font-family: 'Inter', sans-serif;
     font-weight: 800;
-    font-size: 1.35rem; /* större text */
+    font-size: 1.35rem; 
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: #f9fafb;
@@ -274,9 +258,7 @@ code {
     background: #0b1018;
 }
 
-/* ================================
-   LANDING PAGE (Home)
-================================ */
+/* LANDING PAGE (Home) */
 
 .mg-landing {
     padding: 2rem 2.5rem;
@@ -345,9 +327,7 @@ code {
     margin-bottom: 2rem;
 }
 
-/* ================================
-   MARKET DATA CARDS
-================================ */
+/*MARKET DATA CARDS*/
 
 .market-grid {
     display: grid;
@@ -393,9 +373,7 @@ code {
     color: #dc2626;
 }
 
-/* ================================
-   RESPONSIVITET
-================================ */
+/*RESPONSIVITET*/
 @media (max-width: 900px) {
     .mg-navbar {
         flex-direction: column;
@@ -426,9 +404,7 @@ code {
         padding: 2rem 1.5rem;
     }
 }
-/* ================================
-   HOME – HERO + PREVIEW
-================================ */
+/*  HOME – HERO + PREVIEW */
 
 .mg-home {
     max-width: 1200px;

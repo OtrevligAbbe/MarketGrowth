@@ -30,7 +30,7 @@ namespace MarketGrowth.Api.Functions
             _httpClientFactory = httpClientFactory;
         }
 
-        // kör var 5:e minut
+        
         [Function("MarketSnapshotTimer")]
         public async Task Run([TimerTrigger("0 */5 * * * *")] TimerInfo timerInfo)
         {
@@ -85,19 +85,19 @@ namespace MarketGrowth.Api.Functions
                     TimestampUtc = DateTime.UtcNow
                 };
 
-                // föregående snapshot
+                
                 var previous = await _snapshotRepo.GetLatestAsync(asset.Symbol);
 
-                // spara nytt snapshot
+                
                 await _snapshotRepo.SaveAsync(newSnapshot);
                 _logger.LogInformation("Sparade snapshot {Symbol}: {Price} USD", asset.Symbol, price);
 
-                // ingen alert om vi inte har tidigare värde
+                
                 if (previous == null || previous.Price <= 0) continue;
 
                 var changePercent = (newSnapshot.Price - previous.Price) / previous.Price * 100m;
 
-                // tröskel
+          
                 if (Math.Abs(changePercent) < 0.01m) continue;
 
                 var alert = new MarketAlertEntity

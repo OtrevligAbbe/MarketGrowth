@@ -19,7 +19,6 @@ namespace MarketGrowth.Api.Functions
         private readonly ILogger<GetMarketOverviewFunction> _logger;
         private readonly string _alphaKey;
 
-        // Cache för aktier och index
         private static List<MarketInstrument> _cachedStocks = new();
         private static List<MarketInstrument> _cachedIndices = new();
         private static DateTime _stocksLastUpdated = DateTime.MinValue;
@@ -42,7 +41,7 @@ namespace MarketGrowth.Api.Functions
             _alphaKey = Environment.GetEnvironmentVariable("ALPHAVANTAGE_API_KEY") ?? "";
         }
 
-        // HUVUD-ENDPOINT: GET /api/market/overview
+        // GET /api/market/overview
         [Function("GetMarketOverview")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "market/overview")]
@@ -59,7 +58,7 @@ namespace MarketGrowth.Api.Functions
                     Indices = new List<MarketInstrument>()
                 };
 
-                // 1. Crypto (CoinGecko med riktig sparkline)
+                
                 try
                 {
                     var crypto = await FetchCryptoAsync();
@@ -69,7 +68,7 @@ namespace MarketGrowth.Api.Functions
                     }
                     else if (_lastSnapshot?.Crypto is { Count: > 0 })
                     {
-                        // om vi får tom lista men har gamla data → använd gamla
+                        
                         result.Crypto = _lastSnapshot.Crypto;
                     }
                 }
@@ -82,7 +81,7 @@ namespace MarketGrowth.Api.Functions
                     }
                 }
 
-                // 2. Stocks (Alpha Vantage + intern cache + fejk-sparkline)
+               
                 try
                 {
                     var stocks = await FetchStocksAsync();
@@ -104,7 +103,7 @@ namespace MarketGrowth.Api.Functions
                     }
                 }
 
-                // 3. Indices (Alpha Vantage + intern cache + fejk-sparkline)
+                
                 try
                 {
                     var indices = await FetchIndicesAsync();
@@ -133,7 +132,7 @@ namespace MarketGrowth.Api.Functions
 
                 if (hasAnyData)
                 {
-                    // Uppdatera snapshot med allt vi lyckades få fram
+                    
                     lock (_cacheLock)
                     {
                         _lastSnapshot = result;
@@ -144,7 +143,7 @@ namespace MarketGrowth.Api.Functions
                     return response;
                 }
 
-                // Ingen ny data, men tidigare snapshot finns
+               
                 if (_lastSnapshot is not null)
                 {
                     response.StatusCode = HttpStatusCode.OK;
@@ -152,7 +151,7 @@ namespace MarketGrowth.Api.Functions
                     return response;
                 }
 
-                // Absolut ingen data någonsin
+                
                 response.StatusCode = HttpStatusCode.InternalServerError;
                 await response.WriteStringAsync("No market data available.");
                 return response;
@@ -161,7 +160,7 @@ namespace MarketGrowth.Api.Functions
             {
                 _logger.LogError(ex, "Fatal error in GetMarketOverview");
 
-                // Vid total krasch försök ändå skicka snapshot om vi har en
+                
                 if (_lastSnapshot is not null)
                 {
                     response.StatusCode = HttpStatusCode.OK;
@@ -175,7 +174,7 @@ namespace MarketGrowth.Api.Functions
             }
         }
 
-        // KRYPTOVALUTOR (CoinGecko)
+       
 
         private async Task<List<MarketInstrument>> FetchCryptoAsync()
         {
@@ -197,7 +196,7 @@ namespace MarketGrowth.Api.Functions
             AddCoin(root, "ripple", "XRP", "Ripple", list);
             AddCoin(root, "litecoin", "LTC", "Litecoin", list);
 
-            // Hämta 7-dagars sparkline per coin från CoinGecko
+            
             foreach (var asset in list)
             {
                 var id = asset.Symbol.ToUpperInvariant() switch
@@ -258,7 +257,7 @@ namespace MarketGrowth.Api.Functions
             });
         }
 
-        // CoinGecko /market_chart svar
+        
         private class CoinGeckoMarketChartResponse
         {
             [JsonPropertyName("prices")]
@@ -294,7 +293,7 @@ namespace MarketGrowth.Api.Functions
             }
         }
 
-        //AKTIER & INDEX (Alpha Vantage)
+        
 
         private async Task<List<MarketInstrument>> FetchStocksAsync()
         {
@@ -459,7 +458,7 @@ namespace MarketGrowth.Api.Functions
             return instrument;
         }
 
-        //Hjälpmetoder
+        
 
         private static List<decimal> NormalizeToUnit(List<decimal> prices)
         {
@@ -483,7 +482,7 @@ namespace MarketGrowth.Api.Functions
 
             for (int i = 0; i < 20; i++)
             {
-                var step = (decimal)(_random.NextDouble() - 0.5) * 0.2m; // små hopp upp/ner
+                var step = (decimal)(_random.NextDouble() - 0.5) * 0.2m; 
                 current += step;
                 if (current < 0m) current = 0m;
                 if (current > 1m) current = 1m;

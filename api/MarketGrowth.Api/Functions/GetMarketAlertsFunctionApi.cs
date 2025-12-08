@@ -32,7 +32,7 @@ namespace MarketGrowth.Api.Functions
 
             try
             {
-                // hämta t ex senaste 50 alerts
+                // hämta senaste 50 alerts
                 var alerts = await _alertRepo.GetLatestAsync(50);
 
                 var result = alerts

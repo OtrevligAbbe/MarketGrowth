@@ -17,7 +17,7 @@ namespace MarketGrowth.Api.Functions
     {
         private readonly ILogger<FavoritesFunctionApi> _logger;
 
-        // Håller Cosmos-klienten statiskt så vi inte skapar ny varje gång
+        
         private static CosmosClient? _cosmosClient;
         private static Container? _container;
 
@@ -66,12 +66,12 @@ namespace MarketGrowth.Api.Functions
 
             try
             {
-                // 1) Läs body som text och logga den
+                
                 using var reader = new StreamReader(req.Body);
                 var body = await reader.ReadToEndAsync();
                 _logger.LogInformation("RAW BODY in AddFavorite: {Body}", body);
 
-                // 2) Deserialisera body → FavoriteAssetRequest (case-insensitive)
+               
                 var options = new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
@@ -101,7 +101,7 @@ namespace MarketGrowth.Api.Functions
                     CreatedUtc = DateTime.UtcNow
                 };
 
-                // 4) Läs Cosmos-inställningar och logga
+                
                 var connString = Environment.GetEnvironmentVariable("CosmosConnection");
                 var databaseName = Environment.GetEnvironmentVariable("CosmosDbDatabase") ?? "marketgrowth";
                 var containerName = Environment.GetEnvironmentVariable("CosmosDbContainer") ?? "favorites";
@@ -157,7 +157,7 @@ namespace MarketGrowth.Api.Functions
             }
             catch (Exception ex)
             {
-                // Logga HELA exceptionen som text
+               
                 _logger.LogError(ex, "Unexpected error in AddFavorite (outer catch): {Error}", ex.ToString());
                 await response.WriteStringAsync("Favorite received (internal error).");
                 return response;
@@ -167,10 +167,10 @@ namespace MarketGrowth.Api.Functions
 
         private static async Task SaveToCosmosAsync(FavoriteAssetEntity entity)
         {
-            // Vi har ingen logger här, så vi loggar via Console.WriteLine
+            
             try
             {
-                // OBS: vi har ingen ILogger här, så skicka in en "dummy"
+                
                 var logger = Microsoft.Extensions.Logging.Abstractions.NullLogger<FavoritesFunctionApi>.Instance;
                 var container = GetContainer(logger);
                 if (container == null)

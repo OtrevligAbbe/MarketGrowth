@@ -62,10 +62,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Lyssna på ändringar i AuthState (login / logout / reload)
         Auth.OnChange += HandleAuthChanged;
 
-        // Om man redan är inloggad när appen startar → hämta favoriter
         if (Auth.IsLoggedIn && !string.IsNullOrWhiteSpace(Auth.UserId))
         {
             await Auth.ReloadFavoritesAsync();
@@ -79,7 +77,6 @@
 
     private void HandleAuthChanged()
     {
-        // Gör omrendering på UI-tråden
         InvokeAsync(StateHasChanged);
     }
 
@@ -100,12 +97,10 @@
         {
             await Http.DeleteAsync(url);
 
-            // Hämta om från backend så Auth.Favorites & FavoritesCount uppdateras
             await Auth.ReloadFavoritesAsync();
         }
         catch
         {
-            // här kan du logga fel om du vill, men UI ska inte krascha
         }
     }
 
