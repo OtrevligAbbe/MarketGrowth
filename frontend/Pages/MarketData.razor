@@ -48,10 +48,17 @@ else
                     <Sparkline Data="@asset.Sparkline7d"
                                IsPositive="@(asset.Change24h >= 0)" />
 
+                    <!-- Favorite-knapp -->
                     <button type="button"
                             class="mg-fav-button @(IsFavorite(asset) ? "mg-fav-active" : "")"
                             @onclick="@(() => ToggleFavoriteAsync(asset))">
                         <span class="mg-fav-star">★</span>
+                    </button>
+
+                    <!-- Demo-knapp för alerts -->
+                    <button type="button"
+                            class="mg-alert-button">
+                        Alert on this if 5% raises
                     </button>
                 </div>
             }
@@ -78,10 +85,17 @@ else
                     <Sparkline Data="@asset.Sparkline7d"
                                IsPositive="@(asset.Change24h >= 0)" />
 
+                    <!-- Favorite-knapp -->
                     <button type="button"
                             class="mg-fav-button @(IsFavorite(asset) ? "mg-fav-active" : "")"
                             @onclick="@(() => ToggleFavoriteAsync(asset))">
                         <span class="mg-fav-star">★</span>
+                    </button>
+
+                    <!-- Demo-knapp för alerts -->
+                    <button type="button"
+                            class="mg-alert-button">
+                        Alert on this if 5% raises
                     </button>
                 </div>
             }
@@ -108,10 +122,17 @@ else
                     <Sparkline Data="@asset.Sparkline7d"
                                IsPositive="@(asset.Change24h >= 0)" />
 
+                    <!-- Favorite-knapp -->
                     <button type="button"
                             class="mg-fav-button @(IsFavorite(asset) ? "mg-fav-active" : "")"
                             @onclick="@(() => ToggleFavoriteAsync(asset))">
                         <span class="mg-fav-star">★</span>
+                    </button>
+
+                    <!-- Demo-knapp för alerts -->
+                    <button type="button"
+                            class="mg-alert-button">
+                        Alert on this if 5% raises
                     </button>
                 </div>
             }

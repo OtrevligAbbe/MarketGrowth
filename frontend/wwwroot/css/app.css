@@ -784,3 +784,22 @@ code {
     cursor: pointer;
     font-size: 0.8rem;
 }
+
+.mg-alert-button {
+    margin-top: 0.3rem;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid #4b5563;
+    background: transparent;
+    color: #e5e7eb;
+    cursor: pointer;
+    align-self: flex-start;
+    opacity: 0.9;
+}
+
+    .mg-alert-button:hover {
+        border-color: #9ca3af;
+        background: #111827;
+        opacity: 1;
+    }
