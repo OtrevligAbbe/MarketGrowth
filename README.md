@@ -1,114 +1,82 @@
 # MarketGrowth
-
-MarketGrowth is a modern serverless cloud application built on Microsoft Azure that aggregates real-time market data such as stocks and cryptocurrencies using external APIs. The project demonstrates how to build a secure, scalable, and cost-effective cloud-native solution using multiple Azure services.
-
-The system consists of a Blazor frontend, a serverless API backend using Azure Functions, and a cloud database powered by Azure Cosmos DB. Continuous deployment is handled through GitHub Actions, and all sensitive secrets are securely stored in Azure Key Vault.
+> **En Serverless Cloud plattform för Finansiell Analys i Microsoft Azure.**
 
 ---
 
-## Architecture Overview
+## 📖 Om Projektet
 
-MarketGrowth is built with a fully serverless and event-driven architecture:
+**MarketGrowth** är ett examensarbete inom Cloud Development som demonstrerar hur man bygger en modern, skalbar och kostnadseffektiv finanstjänst helt utan servrar.
 
-- Frontend: Blazor WebAssembly hosted in Azure Static Web Apps
-- Backend API: Azure Functions (.NET 8 Isolated)
-- Database: Azure Cosmos DB (NoSQL)
-- Authentication: Azure AD B2C
-- CI/CD: GitHub Actions
-- Secrets Management: Azure Key Vault
-- Monitoring & Logging: Application Insights
-- Alerts & Dashboards: Azure Monitor, Alerts & Workbooks
+Plattformen aggregerar realtidsdata för kryptovalutor, aktier och index från externa API:er och presenterar detta i en blixtsnabb SPA (Single Page Application). Genom att utnyttja **Azure Serverless**-teknik skalas systemet automatiskt efter belastning samtidigt som driftkostnaderna minimeras.
 
 ---
 
-## Core Features
+## 📂 Dokumentation & Presentation
 
-- Real-time market data from external APIs (AlphaVantage, CoinGecko)
-- Secure user authentication using Azure AD B2C
-- Personal favorite tracking stored in Cosmos DB
-- Fully automated CI/CD pipeline
-- Production-grade monitoring with metrics, logs, alerts and dashboards
-- Secure secret handling using Azure Key Vault references
-- Scalable serverless backend with minimal cost footprint
+För en djupare insikt i projektets arkitektur, affärsnytta och tekniska implementation, se bifogade dokument:
 
----
+- 📊 **[Verktygspresentation (PDF)](docs/99albste_Examensarbete_Verktygspresentation_MarketGrowth.pdf)**
+  *En överblick av produkten, målgrupp, scenario och funktioner.*
 
-## Technologies Used
-
-- C#
-- .NET 8
-- Azure Functions
-- Azure Cosmos DB
-- Azure Static Web Apps
-- Azure AD B2C
-- Azure Key Vault
-- Azure Application Insights
-- Azure Monitor
-- GitHub Actions
-- Blazor WebAssembly
+- 📘 **[Teknisk Slutrapport (PDF)](docs/99albste_Examensarbete_TekniskDokumentation_MarketGrowth.pdf)**
+  *Djupgående teknisk dokumentation om arkitekturval, CI/CD, säkerhet och kodanalys.*
 
 ---
 
-## CI/CD Pipeline
+## 🏗️ Systemarkitektur
 
-The project is automatically built and deployed using GitHub Actions:
+Systemet är byggt enligt en händelsestyrd mikrotjänst arkitektur:
 
-- Push to main triggers build
-- .NET project is compiled
-- Azure login is performed using federated identity
-- Azure Functions app is deployed automatically
+| Komponent | Teknik | Beskrivning                                                                   |
+| :--- | :--- |:------------------------------------------------------------------------------|
+| **Frontend** | Blazor WebAssembly | Körs i klientens webbläsare, hostad på **Azure Static Web Apps**.             |
+| **API Gateway** | Azure Functions | .NET 8 Isolated Worker. Hanterar affärslogik, caching och proxy-anrop.        |
+| **Databas** | Azure Cosmos DB | NoSQL databas partitionerad för hög prestanda. Lagrar favoriter och historik. |
+| **Säkerhet** | Azure Key Vault | Lagrar alla hemligheter. Åtkomst via **Managed Identity**.                    |
+| **Övervakning** | Application Insights | Realtidsloggning, prestandamätning och distributed tracing.                   |
 
-This ensures zero-downtime deployments with full traceability.
-
----
-
-## Security
-
-- All API keys and connection strings are stored in Azure Key Vault
-- No secrets are stored in code or GitHub
-- Azure Managed Identity is used for secure access to Key Vault
-- Authentication is handled by Azure AD B2C
+*Systemet driftas i två separata resursgrupper för logisk separation av Compute och Data.*
 
 ---
 
-## Monitoring & Observability
+## ✨ Huvudfunktioner
 
-MarketGrowth is fully monitored using Azure-native tooling:
-
-- Application Insights tracks requests, failures, latency, dependencies and exceptions
-- Azure Alerts notify on failed requests and performance degradation
-- Azure Workbooks visualize system health and traffic trends
-
----
-
-## Project Structure
-
-```
-MarketGrowth/
-│
-├── api/MarketGrowth.Api       -> Azure Functions backend
-├── frontend                  -> Blazor WebAssembly frontend
-├── .github/workflows         -> GitHub CI/CD pipelines
-├── README.md
-└── MarketGrowth_Dokumentation.md
-```
+* **Realtidsdata:** Aggregering av live kurser från CoinGecko och Alpha Vantage.
+* **Sparklines:** Visuell trendanalys (7 dagar) direkt i listvyn.
+* **Favoriter:** Personlig bevakningslista som sparas persistent i molnet per användare.
+* **Intelligenta Alerts:** Bakgrundsprocess (Timer Trigger) som övervakar marknaden och loggar stora prisrörelser.
+* **Enterprise Security:** Inga hårdkodade lösenord. All konfiguration sker via Key Vault.
 
 ---
 
-## Purpose of the Project
+## 🛠️ Teknisk Stack
 
-This project was developed as part of a cloud and system development examination to demonstrate:
+**Frontend:**
+* C# / Blazor WASM
+* HTML5 / CSS3 (Custom Dark Theme)
 
-- Serverless architecture
-- Secure cloud authentication
-- API integration
-- Cloud database usage
-- CI/CD automation
-- Monitoring and alerting
-- Production-grade cloud design principles
+**Backend:**
+* Azure Functions v4 (.NET 8 Isolated)
+* Dependency Injection
+* Entity Models / DTOs
+
+**DevOps & Cloud:**
+* **CI/CD:** GitHub Actions (Separata pipelines för Frontend och Backend)
+* **IaC:** Infrastruktur hanteras via Azure Portal deployment
+* **Database:** Cosmos DB (SQL API)
 
 ---
 
-## Author
+## 🚀 Kom igång (Lokalt)
 
-Developed by OtrevligAbbe
+För att köra projektet på din egen maskin:
+
+### Förkrav
+* .NET 8 SDK
+* Azure Functions Core Tools v4
+* En Cosmos DB instans (eller Emulator)
+
+### 1. Klona repot
+```bash
+git clone [https://github.com/OtrevligAbbe/MarketGrowth.git](https://github.com/OtrevligAbbe/MarketGrowth.git)
+cd MarketGrowth
