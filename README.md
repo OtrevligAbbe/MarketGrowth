@@ -162,6 +162,7 @@ Skapa `local.settings.json` i:
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
     "CosmosConnection": "DIN_COSMOS_CONNECTION_STRING",
     "ALPHAVANTAGE_API_KEY": "DIN_API_NYCKEL"
+    "COINGECKO_API_KEY": "DIN_API_NYCKEL"
   }
 }
 ```
